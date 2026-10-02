@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>PestPulse - Farmer</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="shortcut icon" href="/static/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    /* ── Tabs ── */
+    .tab-bar {
+      display:flex;gap:0;border-bottom:2px solid var(--border);
+      background:var(--bg-card);position:sticky;top:62px;z-index:50;
+    }
+    .tab-btn {
+      flex:1;padding:12px 6px;font-size:0.78rem;font-weight:700;
+      background:none;border:none;cursor:pointer;color:var(--text-muted);
+      border-bottom:2px solid transparent;margin-bottom:-2px;
+      transition:var(--transition);display:flex;flex-direction:column;
+      align-items:center;gap:3px;
+    }
+    .tab-btn .tab-em { font-size:1.2rem; }
+    .tab-btn.active { color:var(--green);border-bottom-color:var(--green); }
+    .tab-pane { display:none;padding:20px 16px; }
+    .tab-pane.active { display:block; }
+
+    /* ── AI detected banner ── */
+    .ai-banner {
+      background:rgba(0,230,118,0.08);border:1px solid var(--green-border);
+      border-radius:14px;padding:14px 16px;margin-bottom:16px;
+    }
+    .ai-banner h3 { font-size:0.85rem;color:var(--green);margin-bottom:8px; }
+    .ai-tag {
+      display:inline-flex;align-items:center;gap:5px;
+      background:var(--green-glow);border:1px solid var(--green);
+      color:var(--green);border-radius:20px;padding:4px 12px;
+      font-size:0.78rem;font-weight:700;margin:3px;
+    }
+    /* ── Known issues quick-select ── */
+    .known-issues {
+      display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;
+    }
+    .issue-chip {
+      background:var(--bg-card-2);border:1.5px solid var(--border);
+      border-radius:20px;padding:6px 14px;font-size:0.78rem;font-weight:600;
+      color:var(--text-muted);cursor:pointer;transition:var(--transition);
+    }
+    .issue-chip:hover { border-color:var(--green-border);color:var(--green); }
+    .issue-chip.selected { border-color:var(--green);background:var(--green-glow);color:var(--green); }
+    .issue-chip .chip-em { margin-right:4px; }
+
+    /* ── Step wizard ── */
+    .step-nav { display:flex;gap:10px;margin-top:20px; }
+    .step-nav .btn { flex:1; }
+
+    /* ── Severity grid ── */
+    .sev-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:8px; }
+    .sev-btn {
+      display:flex;flex-direction:column;align-items:center;gap:5px;
+      background:var(--bg-card-2);border:2px solid var(--border);
+      border-radius:12px;padding:12px 4px;cursor:pointer;
+      transition:var(--transition);text-align:center;
+    }
+    .sev-btn .sev-em { font-size:1.8rem; }
+    .sev-btn .sev-lbl { font-size:0.68rem;font-weight:700;color:var(--text-muted); }
+    .sev-btn.selected { border-color:var(--green);background:var(--green-glow); }
+    .sev-btn.selected .sev-lbl { color:var(--green); }
+    .sev-btn.red.selected { border-color:var(--red);background:var(--red-glow); }
+    .sev-btn.amber.selected { border-color:var(--amber);background:var(--amber-glow); }
+
+    /* ── Rain ── */
+    .rain-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .rain-btn {
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      background:var(--bg-card-2);border:2px solid var(--border);
+      border-radius:12px;padding:16px 8px;cursor:pointer;transition:var(--transition);
+      font-size:0.82rem;font-weight:700;color:var(--text-muted);
+    }
+    .rain-btn .rain-em { font-size:2rem; }
+    .rain-btn.selected { border-color:var(--green);background:var(--green-glow);color:var(--green); }
+
+    /* ── Summary ── */
+    .sum-row {
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 0;border-bottom:1px solid var(--border);font-size:0.86rem;
+    }
+    .sum-row:last-child { border-bottom:none; }
+
+    /* ── History ── */
+    .hist-card {
+      background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:12px;padding:14px 16px;margin-bottom:10px;
+      display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+      transition:var(--transition);
+    }
+    .hist-card:hover { border-color:var(--green-border); }
+
+    /* ── KVK card ── */
+    .kvk-card {
+      background:var(--bg-card-2);border:1px solid var(--border);border-radius:12px;
+      padding:14px 16px;margin-bottom:10px;display:flex;
+      justify-content:space-between;align-items:center;
+    }
+    .kvk-name { font-weight:700;font-size:0.9rem; }
+    .kvk-loc  { font-size:0.75rem;color:var(--text-muted);margin-top:2px; }
+    .kvk-actions { display:flex;gap:8px; }
+
+    /* ── Tips ── */
+    .tip-card {
+      background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:12px;padding:14px 16px;margin-bottom:10px;
+    }
+    .tip-title { font-weight:700;font-size:0.88rem;margin-bottom:4px; }
+    .tip-body  { font-size:0.78rem;color:var(--text-muted);line-height:1.6; }
+
+    /* ── Section header ── */
+    .sec-hdr {
+      font-size:0.7rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.08em;color:var(--text-muted);
+      display:flex;align-items:center;gap:6px;margin-bottom:10px;
+    }
+
+    /* ── Upload zone ── */
+    .upload-preview { position:relative;margin-bottom:12px; }
+    .upload-preview img { width:100%;border-radius:12px;max-height:260px;object-fit:cover; }
+    .upload-preview .remove-btn {
+      position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);
+      border:none;color:white;width:28px;height:28px;border-radius:50%;
+      cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
+    }
+    .infer-card {
+      background:var(--bg-card-2);border:1px solid var(--green-border);
+      border-radius:12px;padding:14px 16px;margin-bottom:12px;
+    }
+    .infer-card .disease-name { font-size:1.05rem;font-weight:800;color:var(--text); }
+    .infer-card .conf-bar-wrap { height:6px;background:var(--border);border-radius:4px;margin-top:8px; }
+    .infer-card .conf-bar { height:6px;background:var(--green);border-radius:4px; }
+    .disclaimer {
+      font-size:0.72rem;color:var(--amber);background:var(--amber-glow);
+      border:1px solid rgba(245,158,11,0.2);border-radius:8px;
+      padding:8px 12px;margin-top:8px;
+    }
+
+    /* ── AgriTools ── */
+    .tool-pill {
+      background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:20px;padding:7px 16px;font-size:0.78rem;font-weight:600;
+      color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:var(--transition);
+    }
+    .tool-pill.active {
+      background:var(--green-glow);border-color:var(--green-border);color:var(--green);
+    }
+    .stepper-btn {
+      width:44px;height:44px;border-radius:50%;border:2px solid var(--border);
+      background:var(--bg-card-2);color:var(--text);font-size:1.4rem;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:var(--transition);
+    }
+    .stepper-btn:hover { border-color:var(--green);color:var(--green); }
+    /* Crop scope badges */
+    .crop-upcoming { opacity:0.62; position:relative; }
+    .crop-upcoming:hover { opacity:0.85; }
+    .upcoming-badge {
+      position:absolute;top:3px;right:3px;font-size:0.55rem;
+      background:var(--text-muted);color:var(--bg);border-radius:4px;
+      padding:1px 3px;font-weight:700;letter-spacing:.02em;
+    }
+    .unit-radio {
+      display:flex;align-items:center;gap:5px;font-size:0.78rem;
+      color:var(--text-muted);cursor:pointer;
+    }
+    .unit-radio input { accent-color:var(--green); }
+    .form-select {
+      width:100%;background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:8px;padding:8px 10px;color:var(--text);font-size:0.82rem;
+      outline:none;
+    }
+    .form-select:focus { border-color:var(--green-border); }
+    .nutrient-card {
+      background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:12px;padding:14px;margin-bottom:10px;
+    }
+    .nutrient-label { font-size:0.7rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.06em;color:var(--text-muted);margin-bottom:6px; }
+    .nutrient-value { font-size:1.6rem;font-weight:900;color:var(--green);line-height:1; }
+    .nutrient-sub   { font-size:0.75rem;color:var(--text-muted);margin-top:2px; }
+    .buy-btn {
+      display:inline-flex;align-items:center;gap:6px;
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:8px;padding:5px 12px;font-size:0.73rem;color:var(--text-muted);
+      text-decoration:none;transition:var(--transition);cursor:pointer;
+    }
+    .buy-btn:hover { border-color:var(--green-border);color:var(--green); }
+    .result-headline { font-size:2.2rem;font-weight:900;color:var(--green);line-height:1; }
+    .result-sub      { font-size:0.78rem;color:var(--text-muted);margin-top:3px; }
+    .profit-bar-wrap { height:14px;background:var(--border);border-radius:8px;margin:10px 0; }
+    .profit-bar      { height:14px;border-radius:8px;transition:width 0.6s ease; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/login" class="nav-logo" style="text-decoration:none">
+    <span class="logo-dot">🌿</span> PestPulse
+  </a>
+  <div class="nav-links">
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+      <button class="lang-btn" data-lang="hi" onclick="setLang('hi')">हिंदी</button>
+    </div>
+    <a href="/officer" class="btn btn-ghost btn-sm" style="margin-left:8px" id="nav-officer">Officer</a>
+  </div>
+</nav>
+
+<!-- Weather freshness strip -->
+<div id="weather-strip" style="
+  background:var(--bg-card-2);border-bottom:1px solid var(--border);
+  padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:0.75rem;
+  color:var(--text-muted);min-height:32px;">
+  <span>🌡️</span>
+  <span id="weather-text">Loading weather…</span>
+  <span id="weather-badge" style="
+    margin-left:auto;border-radius:20px;padding:2px 10px;font-size:0.68rem;
+    font-weight:700;background:var(--border);color:var(--text-dim)">—</span>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="scan" onclick="switchTab('scan')">
+    <span class="tab-em">📷</span><span class="tab-lbl" data-ik="tab.scan">Scan</span>
+  </button>
+  <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
+    <span class="tab-em">📋</span><span class="tab-lbl" data-ik="tab.history">My Reports</span>
+  </button>
+  <button class="tab-btn" data-tab="followup" onclick="switchTab('followup')">
+    <span class="tab-em">🔁</span><span class="tab-lbl" data-ik="tab.followup">Follow-up</span>
+  </button>
+  <button class="tab-btn" data-tab="kvk" onclick="switchTab('kvk')">
+    <span class="tab-em">📞</span><span class="tab-lbl" data-ik="tab.kvk">KVK Helpline</span>
+  </button>
+  <button class="tab-btn" data-tab="field" onclick="switchTab('field')">
+    <span class="tab-em">🌍</span><span class="tab-lbl" data-ik="tab.field">My Field</span>
+  </button>
+  <button class="tab-btn" data-tab="tools" onclick="switchTab('tools')">
+    <span class="tab-em">🧮</span><span class="tab-lbl" data-ik="tab.tools">Tools</span>
+  </button>
+  <button class="tab-btn" data-tab="tips" onclick="switchTab('tips')">
+    <span class="tab-em">💡</span><span class="tab-lbl" data-ik="tab.tips">Tips</span>
+  </button>
+</div>
+
+<!-- ══════════════════════ TAB 1: SCAN ══════════════════════ -->
+<div class="tab-pane active" id="tab-scan" style="max-width:640px;margin:0 auto">
+
+  <!-- Neighbour alert banner (populated by loadNeighbourAlert()) -->
+  <div id="neighbour-alert" style="display:none;background:#92400e22;border:1px solid #f59e0b55;
+    border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.78rem;
+    color:#fbbf24;align-items:center;gap:8px;line-height:1.5"></div>
+
+  <!-- Step indicator -->
+  <div class="steps" id="step-indicator">
+    <div class="step-item active" id="si-1">
+      <div class="step-circle">1</div>
+      <div class="step-label" id="sl-1">Photo</div>
+    </div>
+    <div class="step-item" id="si-2">
+      <div class="step-circle">2</div>
+      <div class="step-label" id="sl-2">Confirm</div>
+    </div>
+    <div class="step-item" id="si-3">
+      <div class="step-circle">3</div>
+      <div class="step-label" id="sl-3">Submit</div>
+    </div>
+  </div>
+
+  <!-- ── Step 1: Photo + AI scan ── -->
+  <div id="step-1">
+    <div class="page-header">
+      <h2 id="s1-title">📷 Upload Leaf Photo</h2>
+      <p id="s1-sub">Snap a close-up. AI will instantly detect the disease.</p>
+    </div>
+
+    <!-- Location pill -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.75rem;
+      background:var(--bg-card-2);border:1px solid var(--border);border-radius:20px;
+      padding:5px 14px;width:fit-content">
+      <span style="color:var(--text-muted)">📍</span>
+      <span id="location-label" style="color:var(--text-muted)">Detecting location…</span>
+    </div>
+
+    <!-- Upload zone — shows two buttons on mobile so user can choose camera OR gallery -->
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">📷</div>
+      <p><strong id="upload-cta">Tap to capture or upload</strong></p>
+      <p style="font-size:0.75rem;color:var(--text-dim)" id="upload-sub">JPG · PNG · WEBP · Camera</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" style="padding:8px 18px;font-size:0.85rem;" onclick="document.getElementById('file-input-camera').click()">
+          📸 <span data-i18n="btn.camera">Take Photo</span>
+        </button>
+        <button type="button" class="btn btn-secondary" style="padding:8px 18px;font-size:0.85rem;" onclick="document.getElementById('file-input-gallery').click()">
+          🖼 <span data-i18n="btn.gallery">Upload from Gallery</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="upload-preview hidden" id="upload-preview">
+      <img id="preview-img" src="" alt=""/>
+      <button class="remove-btn" onclick="removeImage()">✕</button>
+    </div>
+    <!-- Camera input: opens camera directly on mobile -->
+    <input type="file" id="file-input-camera" accept="image/*" capture="environment" style="display:none" onchange="onFileSelected(event)"/>
+    <!-- Gallery input: opens file picker / photo library on mobile -->
+    <input type="file" id="file-input-gallery" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" style="display:none" onchange="onFileSelected(event)"/>
+    <!-- Legacy single input for any code that still references it -->
+    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="onFileSelected(event)"/>
+
+    <!-- AI inference result -->
+    <div id="infer-result" style="margin-top:12px"></div>
+
+    <div class="step-nav">
+      <button class="btn btn-primary btn-lg w-100" id="step1-next" onclick="goStep(2)" disabled>
+        <span id="step1-next-lbl">Next →</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Confirm / correct details ── -->
+  <div id="step-2" class="hidden">
+    <div class="page-header">
+      <h2 id="s2-title">✏️ Confirm Details</h2>
+      <p id="s2-sub">AI pre-filled what it detected. Correct if needed.</p>
+    </div>
+
+    <!-- AI banner -->
+    <div class="ai-banner hidden" id="ai-banner">
+      <h3>🤖 AI Detected <span id="ai-conf-lbl" style="font-weight:400;font-size:0.78rem"></span></h3>
+      <div id="ai-tags"></div>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:6px" id="ai-disc">Tap options below to change anything.</p>
+    </div>
+
+    <!-- CROP -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">🌾 <span id="lbl-crop">CROP TYPE</span></div>
+      <!-- Tomato = active (trained). All others = upcoming (click routes to expert review) -->
+      <div class="icon-grid" id="crop-grid">
+        <div class="icon-option crop-active" data-val="tomato" onclick="pick('crop',this)" style="position:relative">
+          <span class="icon-em">🍅</span>
+          <span class="icon-label" data-ik="crop.tomato">Tomato</span>
+          <span style="position:absolute;top:3px;right:3px;font-size:0.5rem;background:var(--green);color:#fff;border-radius:4px;padding:1px 4px;font-weight:700;letter-spacing:.03em">BETA</span>
+        </div>
+        <div class="icon-option crop-upcoming" data-val="potato"      onclick="pickUpcoming('potato',this)"><span class="icon-em">🥔</span><span class="icon-label" data-ik="crop.potato">Potato</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="corn_maize"  onclick="pickUpcoming('corn_maize',this)"><span class="icon-em">🌽</span><span class="icon-label" data-ik="crop.corn_maize">Corn</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="grape"       onclick="pickUpcoming('grape',this)"><span class="icon-em">🍇</span><span class="icon-label" data-ik="crop.grape">Grape</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="bell_pepper" onclick="pickUpcoming('bell_pepper',this)"><span class="icon-em">🫑</span><span class="icon-label" data-ik="crop.bell_pepper">Pepper</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="strawberry"  onclick="pickUpcoming('strawberry',this)"><span class="icon-em">🍓</span><span class="icon-label" data-ik="crop.strawberry">Strawberry</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="orange"      onclick="pickUpcoming('orange',this)"><span class="icon-em">🍊</span><span class="icon-label" data-ik="crop.orange">Orange</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="soybean"     onclick="pickUpcoming('soybean',this)"><span class="icon-em">🫘</span><span class="icon-label" data-ik="crop.soybean">Soybean</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option crop-upcoming" data-val="apple"       onclick="pickUpcoming('apple',this)"><span class="icon-em">🍎</span><span class="icon-label" data-ik="crop.apple">Apple</span><span class="upcoming-badge">🔜</span></div>
+        <div class="icon-option" data-val="other" onclick="pick('crop',this)"><span class="icon-em">🌱</span><span class="icon-label" data-ik="crop.other">Other</span></div>
+      </div>
+      <!-- Scope notice — always visible, matches model_manifest crop_scope -->
+      <div id="crop-scope-notice" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);display:flex;align-items:flex-start;gap:6px">
+        <span>⚗️</span>
+        <span data-ik="scope.notice">AI model trained on <strong>Tomato only</strong> (79.5% accuracy, held-out test set). Other crops → expert review. <em>DEMO — not field-validated.</em></span>
+      </div>
+    </div>
+
+    <!-- KNOWN ISSUES for selected crop (5 chips, dynamically shown) -->
+    <div id="known-issues-section" style="margin-bottom:18px;display:none">
+      <div class="sec-hdr">⚡ <span id="lbl-known">COMMON ISSUES FOR THIS CROP</span></div>
+      <div class="known-issues" id="known-issues-chips"></div>
+    </div>
+
+    <!-- GROWTH STAGE -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">📅 <span id="lbl-stage">GROWTH STAGE</span></div>
+      <div class="icon-grid" id="stage-grid">
+        <div class="icon-option" data-val="seedling"   onclick="pick('growth_stage',this)"><span class="icon-em">🌱</span><span class="icon-label" data-ik="stage.seedling">Seedling</span></div>
+        <div class="icon-option" data-val="vegetative" onclick="pick('growth_stage',this)"><span class="icon-em">🌿</span><span class="icon-label" data-ik="stage.vegetative">Vegetative</span></div>
+        <div class="icon-option" data-val="flowering"  onclick="pick('growth_stage',this)"><span class="icon-em">🌸</span><span class="icon-label" data-ik="stage.flowering">Flowering</span></div>
+        <div class="icon-option" data-val="fruiting"   onclick="pick('growth_stage',this)"><span class="icon-em">🍒</span><span class="icon-label" data-ik="stage.fruiting">Fruiting</span></div>
+        <div class="icon-option" data-val="maturity"   onclick="pick('growth_stage',this)"><span class="icon-em">🌾</span><span class="icon-label" data-ik="stage.maturity">Maturity</span></div>
+      </div>
+    </div>
+
+    <!-- SYMPTOM — unified chips + voice + type -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">🔍 <span id="lbl-symptom">WHAT DO YOU SEE?</span></div>
+
+      <!-- Known symptom chips (tap to select) -->
+      <div class="icon-grid" id="symptom-grid" style="margin-bottom:12px">
+        <div class="icon-option" data-val="leaf_spots"       onclick="pick('symptom_group',this)"><span class="icon-em">🟤</span><span class="icon-label" data-ik="sym.leaf_spots">Leaf Spots</span></div>
+        <div class="icon-option" data-val="yellowing"        onclick="pick('symptom_group',this)"><span class="icon-em">💛</span><span class="icon-label" data-ik="sym.yellowing">Yellowing</span></div>
+        <div class="icon-option" data-val="wilting"          onclick="pick('symptom_group',this)"><span class="icon-em">🥀</span><span class="icon-label" data-ik="sym.wilting">Wilting</span></div>
+        <div class="icon-option" data-val="leaf_curling"     onclick="pick('symptom_group',this)"><span class="icon-em">🌀</span><span class="icon-label" data-ik="sym.leaf_curling">Leaf Curling</span></div>
+        <div class="icon-option" data-val="holes_or_chewing" onclick="pick('symptom_group',this)"><span class="icon-em">🕳️</span><span class="icon-label" data-ik="sym.holes">Holes / Eaten</span></div>
+        <div class="icon-option" data-val="powder_coating"   onclick="pick('symptom_group',this)"><span class="icon-em">⬜</span><span class="icon-label" data-ik="sym.powder">White Powder</span></div>
+        <div class="icon-option" data-val="stem_rot"         onclick="pick('symptom_group',this)"><span class="icon-em">🔴</span><span class="icon-label" data-ik="sym.stem_rot">Stem Rot</span></div>
+        <div class="icon-option" data-val="none_visible"     onclick="pick('symptom_group',this)"><span class="icon-em">✅</span><span class="icon-label" data-ik="sym.healthy">Looks Healthy</span></div>
+      </div>
+
+      <!-- Describe it yourself — type OR speak -->
+      <div style="background:var(--bg-card-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+          <span data-ik="describe.heading">🗣️ Or describe it yourself</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <!-- Text input -->
+          <textarea id="symptom-text-input" rows="2"
+            placeholder="e.g. brown patches on leaves, white powder on stem…"
+            oninput="onSymptomTextInput(this.value)"
+            style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+              padding:8px 10px;color:var(--text);font-size:0.82rem;resize:none;outline:none;
+              font-family:inherit;line-height:1.5"></textarea>
+          <!-- Voice button -->
+          <button class="mic-btn" id="mic-btn" onclick="toggleMic()"
+            style="flex-shrink:0;width:48px;height:48px;padding:0;border-radius:12px;
+              display:flex;flex-direction:column;align-items:center;justify-content:center;
+              font-size:1.3rem;line-height:1">
+            <span>🎤</span>
+          </button>
+        </div>
+        <!-- Voice status / transcript -->
+        <div id="mic-status" style="display:none;margin-top:8px;font-size:0.75rem;
+          color:var(--green);background:var(--green-glow);border-radius:8px;padding:6px 10px"></div>
+      </div>
+    </div>
+
+    <!-- SEVERITY -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">⚠️ <span id="lbl-severity">HOW MANY PLANTS AFFECTED?</span></div>
+      <div class="sev-grid">
+        <div class="sev-btn red"   data-val="almost_all" onclick="pickSev(this)"><span class="sev-em">🔴</span><span class="sev-lbl" data-ik="sev.almost_all">Almost All</span></div>
+        <div class="sev-btn amber" data-val="many"       onclick="pickSev(this)"><span class="sev-em">🟠</span><span class="sev-lbl" data-ik="sev.many">Many</span></div>
+        <div class="sev-btn"       data-val="few"        onclick="pickSev(this)"><span class="sev-em">🟡</span><span class="sev-lbl" data-ik="sev.few">A Few</span></div>
+        <div class="sev-btn"       data-val="unknown"    onclick="pickSev(this)"><span class="sev-em">❓</span><span class="sev-lbl" data-ik="sev.unknown">Not Sure</span></div>
+      </div>
+    </div>
+
+    <!-- AFFECTED AREA OF FIELD -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">🌾 <span id="lbl-area">HOW MUCH OF THE FIELD IS AFFECTED?</span></div>
+      <div class="icon-grid" id="area-grid">
+        <div class="icon-option" data-val="few_plants"    onclick="pick('affected_area_band',this)"><span class="icon-em">🌱</span><span class="icon-label" data-ik="area.few_plants">A Few Plants</span></div>
+        <div class="icon-option" data-val="one_part"      onclick="pick('affected_area_band',this)"><span class="icon-em">🔲</span><span class="icon-label" data-ik="area.one_part">One Part</span></div>
+        <div class="icon-option" data-val="much_of_field" onclick="pick('affected_area_band',this)"><span class="icon-em">🟧</span><span class="icon-label" data-ik="area.much_of_field">Much of Field</span></div>
+        <div class="icon-option" data-val="not_sure"      onclick="pick('affected_area_band',this)"><span class="icon-em">❓</span><span class="icon-label" data-ik="area.not_sure">Not Sure</span></div>
+      </div>
+    </div>
+
+    <!-- RAIN -->
+    <div style="margin-bottom:18px">
+      <div class="sec-hdr">🌧️ <span id="lbl-rain">RAIN IN LAST 48H?</span></div>
+      <div class="rain-grid">
+        <div class="rain-btn" data-val="yes" onclick="pickRain(this)"><span class="rain-em">🌧️</span><span data-ik="rain.yes">Yes, it rained</span></div>
+        <div class="rain-btn" data-val="no"  onclick="pickRain(this)"><span class="rain-em">☀️</span><span data-ik="rain.no">No rain</span></div>
+      </div>
+    </div>
+
+    <!-- PEST TRAP COUNT — visible spinner, not hidden in <details> -->
+    <div style="margin-bottom:16px;background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:12px;padding:12px 14px">
+      <div class="sec-hdr" style="margin-bottom:10px">
+        🪤 <span data-ik="trap.label">Pest Trap Count</span>
+        <span style="font-weight:400;font-size:0.7rem;color:var(--text-muted);margin-left:6px">(optional)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="stepper-btn" onclick="stepTrap(-1)">−</button>
+        <div style="flex:1;text-align:center;background:var(--bg-card);border-radius:10px;padding:10px">
+          <span id="trap-count-disp" style="font-size:1.8rem;font-weight:900;color:var(--text)">0</span>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px"><span data-ik="trap.unit">insects caught</span></div>
+        </div>
+        <button class="stepper-btn" onclick="stepTrap(1)">+</button>
+        <input type="hidden" id="trap-count" value="0">
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-top:8px">
+        <span data-ik="trap.hint">Count from your sticky / pheromone trap in the last 24 hours. 0 = no trap / not checked.</span>
+      </div>
+    </div>
+
+    <!-- NEARBY REPORTS — wires the real nearby_count evidence signal -->
+    <div style="margin-bottom:16px;background:var(--bg-card-2);border:1px solid var(--border);
+      border-radius:12px;padding:12px 14px">
+      <div class="sec-hdr" style="margin-bottom:10px">
+        📍 <span data-ik="nearby.label">Nearby Disease Reports</span>
+        <span style="font-weight:400;font-size:0.7rem;color:var(--text-muted);margin-left:6px">(optional)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="stepper-btn" onclick="stepNearby(-1)">−</button>
+        <div style="flex:1;text-align:center;background:var(--bg-card);border-radius:10px;padding:10px">
+          <span id="nearby-count-disp" style="font-size:1.8rem;font-weight:900;color:var(--text)">0</span>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px"><span data-ik="nearby.unit">cases nearby</span></div>
+        </div>
+        <button class="stepper-btn" onclick="stepNearby(1)">+</button>
+        <input type="hidden" id="nearby-count" value="0">
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-top:8px">
+        <span data-ik="nearby.hint">How many other farmers in your village have reported a similar problem this week? 0 = none / unknown.</span>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn btn-secondary" onclick="goStep(1)" id="back1"><span data-ik="btn.back">← Back</span></button>
+      <button class="btn btn-primary" onclick="goStep(3)" id="step2-next"><span data-ik="btn.next">Next →</span></button>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Confirm & submit ── -->
+  <div id="step-3" class="hidden">
+    <div style="text-align:center;padding:16px 0">
+      <div style="font-size:2.8rem">📋</div>
+      <h2 style="margin-top:8px" id="s3-title">Confirm & Submit</h2>
+    </div>
+    <div class="card" id="summary-card" style="margin-bottom:16px"></div>
+    <div class="disclaimer">⚠️ <span id="s3-disc">AI screening signal only — not a confirmed diagnosis.</span></div>
+    <div class="step-nav" style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="goStep(2)"><span data-ik="btn.back">← Back</span></button>
+      <button class="btn btn-primary btn-lg" id="submit-btn" onclick="submitTriage()" style="flex:2">
+        <span id="submit-lbl" data-ik="btn.submit">Submit for Analysis</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 2: MY REPORTS ══════════════════════ -->
+<div class="tab-pane" id="tab-history">
+  <div class="page-header">
+    <h2>📋 My Reports</h2>
+    <p>Your recent disease scans and their status.</p>
+  </div>
+  <div id="history-list">
+    <div style="text-align:center;padding:40px;color:var(--text-muted)">
+      <div style="font-size:2rem">🔄</div>
+      <p>Loading your reports…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 3: FOLLOW-UP ══════════════════════ -->
+<div class="tab-pane" id="tab-followup">
+  <div class="page-header">
+    <h2>🔁 Follow-up</h2>
+    <p id="fu-subtitle">Record how your crop is doing after a previous scan.</p>
+  </div>
+
+  <!-- Case picker -->
+  <div style="margin-bottom:18px">
+    <div class="sec-hdr">📋 SELECT A PREVIOUS CASE</div>
+    <div id="fu-case-list">
+      <div style="text-align:center;padding:24px;color:var(--text-muted)">🔄 Loading cases…</div>
+    </div>
+  </div>
+
+  <!-- Outcome (shown after case selected) -->
+  <div id="fu-outcome-section" style="display:none">
+    <div class="sec-hdr">🌿 HOW IS THE CROP NOW?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px" id="fu-outcome-grid">
+      <div class="icon-option" data-val="IMPROVED"  onclick="pickFuOutcome(this)"><span class="icon-em">📈</span><span class="icon-label" data-ik="fu.improved">Improved</span></div>
+      <div class="icon-option" data-val="STABLE"    onclick="pickFuOutcome(this)"><span class="icon-em">➖</span><span class="icon-label" data-ik="fu.stable">Stable</span></div>
+      <div class="icon-option" data-val="WORSE"     onclick="pickFuOutcome(this)"><span class="icon-em">📉</span><span class="icon-label" data-ik="fu.worse">Worse</span></div>
+      <div class="icon-option" data-val="UNCLEAR"   onclick="pickFuOutcome(this)"><span class="icon-em">❓</span><span class="icon-label" data-ik="fu.unclear">Not Sure</span></div>
+    </div>
+
+    <div class="sec-hdr">📝 NOTE (OPTIONAL)</div>
+    <textarea id="fu-note" class="form-input" style="min-height:72px;resize:vertical;margin-bottom:16px"
+      placeholder="Any additional observation…"></textarea>
+
+    <button class="btn btn-primary w-100" onclick="submitFollowUp()" id="fu-submit-btn">
+      <span data-ik="fu.submit">Submit Follow-up</span>
+    </button>
+    <div id="fu-result" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 4: KVK HELPLINE ══════════════════════ -->
+<div class="tab-pane" id="tab-kvk">
+  <div class="page-header">
+    <h2>📞 KVK Helpline</h2>
+    <p>Krishi Vigyan Kendra — Karnataka agricultural extension officers. Call directly for expert advice.</p>
+  </div>
+  <div id="kvk-list">
+    <div style="text-align:center;padding:40px;color:var(--text-muted)">🔄 Loading…</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB: AGRI TOOLS ══════════════════════ -->
+<div class="tab-pane" id="tab-tools" style="max-width:680px;margin:0 auto;padding:16px 12px">
+
+  <!-- Tool selector pills -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
+    <button class="tool-pill active" data-tool="fertilizer" onclick="switchTool('fertilizer',this)">🌱 Fertilizer</button>
+    <button class="tool-pill" data-tool="pesticide"  onclick="switchTool('pesticide',this)">🧪 Pesticide</button>
+    <button class="tool-pill" data-tool="profit"     onclick="switchTool('profit',this)">💰 Profitability</button>
+  </div>
+
+  <!-- ── FERTILIZER CALCULATOR ──────────────────────────── -->
+  <div id="tool-fertilizer">
+    <div class="page-header" style="margin-bottom:14px">
+      <h2>🌱 Fertilizer Calculator</h2>
+      <p style="font-size:0.82rem">ICAR-recommended N/P/K dosage for your crop &amp; stage.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">🌾 CROP</label>
+          <select id="fc-crop" class="form-select" onchange="calcFertilizer()">
+            <option value="tomato">🍅 Tomato</option>
+            <option value="potato">🥔 Potato</option>
+            <option value="corn_maize">🌽 Corn</option>
+            <option value="grape">🍇 Grape</option>
+            <option value="bell_pepper">🫑 Pepper</option>
+            <option value="strawberry">🍓 Strawberry</option>
+            <option value="orange">🍊 Orange</option>
+            <option value="soybean">🫘 Soybean</option>
+            <option value="apple">🍎 Apple</option>
+            <option value="other">🌿 Other</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">📅 GROWTH STAGE</label>
+          <select id="fc-stage" class="form-select" onchange="calcFertilizer()">
+            <option value="seedling">Seedling</option>
+            <option value="vegetative" selected>Vegetative</option>
+            <option value="flowering">Flowering</option>
+            <option value="fruiting">Fruiting</option>
+            <option value="maturity">Maturity</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Area stepper -->
+      <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">📐 FIELD SIZE</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <button class="stepper-btn" onclick="stepArea('fc-area',-0.5)">−</button>
+        <div style="flex:1;text-align:center;background:var(--bg-card-2);border-radius:10px;padding:12px">
+          <span id="fc-area-disp" style="font-size:2rem;font-weight:900;color:var(--text)">1.0</span>
+          <input type="hidden" id="fc-area" value="1.0">
+        </div>
+        <button class="stepper-btn" onclick="stepArea('fc-area',0.5)">+</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <label class="unit-radio"><input type="radio" name="fc-unit" value="acre" checked onchange="calcFertilizer()"> Acre</label>
+        <label class="unit-radio"><input type="radio" name="fc-unit" value="hectare" onchange="calcFertilizer()"> Hectare</label>
+        <label class="unit-radio"><input type="radio" name="fc-unit" value="gunta" onchange="calcFertilizer()"> Gunta</label>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="calcFertilizer()">🔢 Calculate</button>
+    </div>
+
+    <!-- Result -->
+    <div id="fc-result" style="display:none"></div>
+  </div>
+
+  <!-- ── PESTICIDE CALCULATOR ───────────────────────────── -->
+  <div id="tool-pesticide" style="display:none">
+    <div class="page-header" style="margin-bottom:14px">
+      <h2>🧪 Pesticide Calculator</h2>
+      <p style="font-size:0.82rem">Exact dosage in ml/g, pump refills &amp; buy links.</p>
+    </div>
+
+    <!-- AI context banner — auto-filled from scan -->
+    <div id="pc-ai-banner" style="display:none;background:#6366f111;border:1px solid #6366f144;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:0.78rem;color:#818cf8">
+      🤖 <strong>Auto-filled from your last scan</strong> — <span id="pc-ai-text"></span>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">🦠 DISEASE / SYMPTOM</label>
+          <select id="pc-disease" class="form-select" onchange="calcPesticide()">
+            <option value="leaf_spots">Leaf Spots</option>
+            <option value="early_blight">Early Blight</option>
+            <option value="late_blight">Late Blight</option>
+            <option value="leaf_mold">Leaf Mold</option>
+            <option value="septoria_leaf_spot">Septoria Leaf Spot</option>
+            <option value="bacterial_spot">Bacterial Spot</option>
+            <option value="mosaic_virus">Mosaic Virus</option>
+            <option value="spider_mites">Spider Mites</option>
+            <option value="powder">Powdery Mildew</option>
+            <option value="wilting">Wilting / Root Rot</option>
+            <option value="holes">Holes / Chewing</option>
+            <option value="yellowing">Yellowing</option>
+            <option value="stem_rot">Stem Rot</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">💊 PRODUCT</label>
+          <select id="pc-product-idx" class="form-select" onchange="calcPesticide()"></select>
+        </div>
+      </div>
+
+      <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">📐 AREA TO TREAT</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <button class="stepper-btn" onclick="stepArea('pc-area',-0.5)">−</button>
+        <div style="flex:1;text-align:center;background:var(--bg-card-2);border-radius:10px;padding:12px">
+          <span id="pc-area-disp" style="font-size:2rem;font-weight:900;color:var(--text)">1.0</span>
+          <input type="hidden" id="pc-area" value="1.0">
+        </div>
+        <button class="stepper-btn" onclick="stepArea('pc-area',0.5)">+</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <label class="unit-radio"><input type="radio" name="pc-unit" value="acre" checked onchange="calcPesticide()"> Acre</label>
+        <label class="unit-radio"><input type="radio" name="pc-unit" value="hectare" onchange="calcPesticide()"> Hectare</label>
+        <label class="unit-radio"><input type="radio" name="pc-unit" value="gunta" onchange="calcPesticide()"> Gunta</label>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="calcPesticide()">🔢 Calculate</button>
+    </div>
+
+    <div id="pc-result" style="display:none"></div>
+  </div>
+
+  <!-- ── PROFITABILITY CALCULATOR ───────────────────────── -->
+  <div id="tool-profit" style="display:none">
+    <div class="page-header" style="margin-bottom:14px">
+      <h2>💰 Profitability Calculator</h2>
+      <p style="font-size:0.82rem">Break-even price, ROI &amp; profit estimate for your season.</p>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">🌾 CROP</label>
+          <select id="pr-crop" class="form-select" onchange="calcProfit()">
+            <option value="tomato">🍅 Tomato</option>
+            <option value="potato">🥔 Potato</option>
+            <option value="corn_maize">🌽 Corn</option>
+            <option value="grape">🍇 Grape</option>
+            <option value="bell_pepper">🫑 Pepper</option>
+            <option value="strawberry">🍓 Strawberry</option>
+            <option value="orange">🍊 Orange</option>
+            <option value="soybean">🫘 Soybean</option>
+            <option value="apple">🍎 Apple</option>
+            <option value="other">🌿 Other</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">📐 AREA</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="stepper-btn" style="width:32px;height:32px;font-size:1rem" onclick="stepArea('pr-area',-0.5)">−</button>
+            <span id="pr-area-disp" style="font-weight:800;font-size:1.1rem;color:var(--text);flex:1;text-align:center">1.0</span>
+            <input type="hidden" id="pr-area" value="1.0">
+            <button class="stepper-btn" style="width:32px;height:32px;font-size:1rem" onclick="stepArea('pr-area',0.5)">+</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px;font-size:0.72rem">
+            <label class="unit-radio"><input type="radio" name="pr-unit" value="acre" checked onchange="calcProfit()"> Acre</label>
+            <label class="unit-radio"><input type="radio" name="pr-unit" value="hectare" onchange="calcProfit()"> Ha</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">₹ SELL PRICE/kg (0=market default)</label>
+          <input type="number" id="pr-price" class="form-select" placeholder="e.g. 22" value="0" oninput="calcProfit()" min="0" step="1">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:6px">📦 EXTRA INPUT COST ₹</label>
+          <input type="number" id="pr-extra" class="form-select" placeholder="e.g. 5000" value="0" oninput="calcProfit()" min="0" step="500">
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="calcProfit()">🔢 Calculate</button>
+    </div>
+    <div id="pr-result" style="display:none"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ TAB 5: TIPS ══════════════════════ -->
+<div class="tab-pane" id="tab-tips">
+  <div class="page-header">
+    <h2>💡 Crop Tips</h2>
+    <p>Research-backed tips from PlantVillage and ICAR.</p>
+  </div>
+  <div id="tips-list">
+    <!-- Injected by JS -->
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 6: MY FIELD ══════════════════════ -->
+<div class="tab-pane" id="tab-field" style="max-width:680px;margin:0 auto;padding:16px">
+  <div class="page-header">
+    <h2>🌍 My Field Intelligence</h2>
+    <p id="field-sub">Soil health, crop suitability &amp; disease risk for your location.</p>
+  </div>
+
+  <!-- Location bar -->
+  <div style="background:var(--bg-card-2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--text-muted)">
+    <span>📍</span>
+    <span id="field-loc-text">Waiting for GPS…</span>
+    <button class="btn btn-ghost btn-sm" onclick="loadFieldIntel(true)" style="margin-left:auto;font-size:0.75rem">🔄 Refresh</button>
+  </div>
+
+  <div id="field-loading" style="text-align:center;padding:40px;color:var(--text-muted)">
+    <div style="font-size:2.5rem">🔄</div>
+    <p style="margin-top:8px">Loading field data…</p>
+    <p style="font-size:0.72rem;margin-top:4px;color:var(--text-dim)">Fetching from SoilGrids (ISRIC) + Open-Meteo</p>
+  </div>
+
+  <div id="field-data" style="display:none">
+
+    <!-- Soil card -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="sec-hdr" style="margin-bottom:0">🪱 SOIL PROFILE</div>
+        <span id="soil-source-badge" style="font-size:0.65rem;border-radius:10px;padding:2px 8px;background:var(--green-glow);color:var(--green);border:1px solid var(--green-border)">LIVE</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:1.8rem;font-weight:900;color:var(--text)" id="soil-ph">—</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">Soil pH</div>
+          <div style="font-size:0.62rem;color:var(--text-dim)" id="soil-ph-note">—</div>
+        </div>
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:1rem;font-weight:800;color:var(--text);line-height:1.3" id="soil-type-lbl">—</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">Soil Type</div>
+        </div>
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:1.8rem;font-weight:900" id="soil-fertility-num">—</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">Fertility Score /100</div>
+          <div style="font-size:0.72rem;font-weight:700;margin-top:2px" id="soil-fertility-lbl">—</div>
+        </div>
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:1rem;font-weight:800;color:var(--text)" id="soil-water">—</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px">Water Retention</div>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px">
+          <span>Fertility</span><span id="soil-fert-pct">—</span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px">
+          <div id="soil-fert-bar" style="height:8px;border-radius:4px;width:0%;transition:width 0.9s ease;background:var(--green)"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;font-size:0.74rem;color:var(--text-muted);flex-wrap:wrap">
+        <span>🧱 Clay: <strong id="soil-clay">—</strong>%</span>
+        <span>🏖️ Sand: <strong id="soil-sand">—</strong>%</span>
+        <span>🌿 Org.Carbon: <strong id="soil-soc">—</strong> g/kg</span>
+        <span>⚗️ Nitrogen: <strong id="soil-n">—</strong> cg/kg</span>
+      </div>
+    </div>
+
+    <!-- Disease risk -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="sec-hdr" style="margin-bottom:10px">🦠 DISEASE RISK (SOIL + WEATHER)</div>
+      <div id="disease-risk-list"></div>
+    </div>
+
+    <!-- Nearby hotspots -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="sec-hdr" style="margin-bottom:0">🔥 ACTIVE HOTSPOTS IN YOUR REGION</div>
+        <span id="hotspot-days-lbl" style="font-size:0.65rem;color:var(--text-dim)">last 30 days</span>
+      </div>
+      <div id="hotspot-list">
+        <div style="text-align:center;padding:16px;color:var(--text-dim);font-size:0.8rem">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Crop recommendations -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="sec-hdr" style="margin-bottom:10px">🌾 CROPS SUITED TO YOUR SOIL &amp; CLIMATE</div>
+      <div id="crop-rec-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+      <p style="font-size:0.68rem;color:var(--text-dim);margin-top:10px">Based on soil pH, type &amp; local temperature — ICAR Karnataka crop compatibility matrix.</p>
+    </div>
+
+    <!-- Weather detail -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="sec-hdr" style="margin-bottom:10px">🌡️ CURRENT WEATHER CONDITIONS</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--text)" id="wf-temp">—</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">Temperature</div>
+        </div>
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--text)" id="wf-humid">—</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">Humidity</div>
+        </div>
+        <div style="background:var(--bg-card-2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--text)" id="wf-rain">—</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">Rainfall</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /field-data -->
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <p style="color:var(--text-muted);margin-top:12px" id="loading-msg">Analysing…</p>
+</div>
+<div class="toast" id="pp-toast"></div>
+
+<script src="/static/app.js"></script>
+<script>
+/* ── i18n dictionary ───────────────────────────────────────── */
+const LABELS = {
+  en: {
+    'tab.scan':'Scan','tab.history':'My Reports','tab.followup':'Follow-up','tab.kvk':'KVK Helpline','tab.field':'My Field','tab.tools':'🧮 Tools','tab.tips':'Tips',
+    'crop.tomato':'Tomato','crop.potato':'Potato','crop.corn_maize':'Corn','crop.grape':'Grape',
+    'crop.bell_pepper':'Pepper','crop.strawberry':'Strawberry','crop.orange':'Orange',
+    'crop.soybean':'Soybean','crop.apple':'Apple','crop.other':'Other',
+    'stage.seedling':'Seedling','stage.vegetative':'Vegetative','stage.flowering':'Flowering',
+    'stage.fruiting':'Fruiting','stage.maturity':'Maturity',
+    'sym.leaf_spots':'Leaf Spots','sym.yellowing':'Yellowing','sym.wilting':'Wilting',
+    'sym.leaf_curling':'Leaf Curling','sym.holes':'Holes / Eaten',
+    'sym.powder':'White Powder','sym.stem_rot':'Stem Rot','sym.healthy':'Looks Healthy',
+    'sev.almost_all':'Almost All','sev.many':'Many','sev.few':'A Few','sev.unknown':'Not Sure',
+    'area.few_plants':'A Few Plants','area.one_part':'One Part','area.much_of_field':'Much of Field','area.not_sure':'Not Sure',
+    'rain.yes':'Yes, it rained','rain.no':'No rain',
+    'trap.label':'Pest Trap Count',
+    'trap.hint':'Count from your sticky / pheromone trap in last 24h. 0 = no trap.',
+    'trap.unit':'insects caught',
+    'btn.back':'← Back','btn.next':'Next →','btn.submit':'Submit for Analysis',
+    'lbl-crop':'CROP TYPE','lbl-stage':'GROWTH STAGE','lbl-symptom':'WHAT DO YOU SEE?',
+    'lbl-severity':'HOW MANY PLANTS AFFECTED?','lbl-rain':'RAIN IN LAST 48H?',
+    'lbl-area':'HOW MUCH OF THE FIELD IS AFFECTED?','lbl-known':'COMMON ISSUES FOR THIS CROP',
+    's1-title':'📷 Upload Leaf Photo','s1-sub':'Snap a close-up. AI will instantly detect the disease.',
+    'upload-cta':'Choose how to add your photo:','upload-sub':'JPG · PNG · WEBP · Camera',
+    'btn.camera':'Take Photo','btn.gallery':'Upload from Gallery',
+    's2-title':'✏️ Confirm Details','s2-sub':'AI pre-filled what it detected. Correct if needed.',
+    's3-title':'Confirm & Submit','s3-disc':'AI screening signal only — not a confirmed diagnosis.',
+    'step1-next-lbl':'Next →','mic-btn-lbl':'Speak','ai-disc':'Tap options below to change anything.',
+    'sl-1':'Photo','sl-2':'Confirm','sl-3':'Submit',
+    'describe.heading':'Or describe it yourself',
+    'describe.placeholder':'e.g. brown patches on leaves, white powder on stem…',
+    'loc.detecting':'Detecting location…',
+    'ai.detected':'AI Detected',
+    'ai.disc':'Tap options below to change anything.',
+    'ai.scanning':'🤖 AI scanning leaf…',
+    'ai.confirm':'✅ AI detected — Confirm →',
+    'ai.low_conf':'⚠️ Low confidence — please verify manually in step 2',
+    'ai.autofill':'✅ Auto-filled:',
+    'ai.error':'⚠️ Could not analyse — proceed manually',
+    'ai.tick':'✔ Accept AI result and auto-fill',
+    'ai.confidence':'Confidence',
+    'ai.model':'Model',
+    'fu.improved':'Improved','fu.stable':'Stable','fu.worse':'Worse','fu.unclear':'Not Sure','fu.submit':'Submit Follow-up',
+    'sum.crop':'Crop','sum.stage':'Stage','sum.symptom':'Symptom','sum.severity':'Severity',
+    'sum.area':'Affected Area','sum.rain':'Rain','sum.location':'Location','sum.image':'Image',
+    'tab.tools':'🧮 Tools',
+    'nearby.label':'Nearby Disease Reports',
+    'nearby.unit':'cases nearby',
+    'nearby.hint':'How many other farmers in your village have reported a similar problem this week? 0 = none / unknown.',
+    'scope.notice':'AI model trained on <strong>Tomato only</strong> (79.5% accuracy, held-out test set). Other crops → expert review. <em>DEMO — not field-validated.</em>',
+    'upcoming.toast':'🔜 Coming soon — AI model for this crop is in training. Your case will be sent to an expert officer for review.',
+  },
+  kn: {
+    'tab.scan':'ಸ್ಕ್ಯಾನ್','tab.history':'ವರದಿಗಳು','tab.followup':'ಅನುಸರಣೆ','tab.kvk':'KVK ಸಹಾಯ','tab.field':'ನನ್ನ ಜಮೀನು','tab.tools':'🧮 ಸಾಧನಗಳು','tab.tips':'ಸಲಹೆ',
+    'crop.tomato':'ಟೊಮೇಟೊ','crop.potato':'ಆಲೂಗಡ್ಡೆ','crop.corn_maize':'ಮೆಕ್ಕೆ ಜೋಳ',
+    'crop.grape':'ದ್ರಾಕ್ಷಿ','crop.bell_pepper':'ಕ್ಯಾಪ್ಸಿಕಂ','crop.strawberry':'ಸ್ಟ್ರಾಬೆರಿ',
+    'crop.orange':'ಕಿತ್ತಳೆ','crop.soybean':'ಸೋಯಾಬೀನ್','crop.apple':'ಸೇಬು','crop.other':'ಇತರ',
+    'stage.seedling':'ಮೊಳಕೆ','stage.vegetative':'ಸಸ್ಯ ಬೆಳವಣಿಗೆ','stage.flowering':'ಹೂ ಬಿಡುವ',
+    'stage.fruiting':'ಕಾಯಿ ಕಟ್ಟುವ','stage.maturity':'ಮಾಗಿದ',
+    'sym.leaf_spots':'ಎಲೆ ಕಲೆ','sym.yellowing':'ಹಳದಿ ಆಗುವಿಕೆ','sym.wilting':'ಬಾಡುವಿಕೆ',
+    'sym.leaf_curling':'ಎಲೆ ಸುರುಳಿ','sym.holes':'ರಂಧ್ರ / ತಿನ್ನುವಿಕೆ',
+    'sym.powder':'ಬಿಳಿ ಹಿಟ್ಟು','sym.stem_rot':'ಕಾಂಡ ಕೊಳೆ','sym.healthy':'ಆರೋಗ್ಯಕರ',
+    'sev.almost_all':'ಬಹುತೇಕ ಎಲ್ಲಾ','sev.many':'ಹೆಚ್ಚು','sev.few':'ಕೆಲವು','sev.unknown':'ತಿಳಿದಿಲ್ಲ',
+    'area.few_plants':'ಕೆಲವು ಸಸ್ಯಗಳು','area.one_part':'ಒಂದು ಭಾಗ','area.much_of_field':'ಹೆಚ್ಚಿನ ಜಮೀನು','area.not_sure':'ಗೊತ್ತಿಲ್ಲ',
+    'rain.yes':'ಹೌದು, ಮಳೆ ಬಿದ್ದಿದೆ','rain.no':'ಇಲ್ಲ, ಒಣಗಿದೆ',
+    'trap.label':'ಕೀಟ ಬಲೆ ಸಂಖ್ಯೆ',
+    'trap.hint':'ನಿಮ್ಮ ಜಿಗುಟು / ಫೆರೋಮೋನ್ ಬಲೆಯಿಂದ ಕಳೆದ 24 ಗಂಟೆಯ ಲೆಕ್ಕ. 0 = ಬಲೆ ಇಲ್ಲ.',
+    'trap.unit':'ಕೀಟಗಳು ಸಿಕ್ಕಿದೆ',
+    'btn.back':'← ಹಿಂದೆ','btn.next':'ಮುಂದೆ →','btn.submit':'ವಿಶ್ಲೇಷಣೆಗಾಗಿ ಸಲ್ಲಿಸಿ',
+    'lbl-crop':'ಬೆಳೆ ವಿಧ','lbl-stage':'ಬೆಳವಣಿಗೆ ಹಂತ','lbl-symptom':'ನೀವು ಏನು ನೋಡುತ್ತಿದ್ದೀರಿ?',
+    'lbl-severity':'ಎಷ್ಟು ಸಸ್ಯಗಳು ಬಾಧಿತ?','lbl-rain':'ಕಳೆದ 48 ಗಂಟೆ ಮಳೆ ಬಿದ್ದಿದೆಯೇ?',
+    'lbl-area':'ಜಮೀನಿನ ಎಷ್ಟು ಭಾಗ ಬಾಧಿತ?','lbl-known':'ಈ ಬೆಳೆಗೆ ಸಾಮಾನ್ಯ ರೋಗಗಳು',
+    's1-title':'📷 ಎಲೆ ಫೋಟೊ ಅಪ್ಲೋಡ್ ಮಾಡಿ','s1-sub':'ಸ್ಪಷ್ಟ ಫೋಟೊ ತೆಗೆಯಿರಿ. AI ರೋಗ ಪತ್ತೆ ಮಾಡುತ್ತದೆ.',
+    'upload-cta':'ಫೋಟೊ ಹೇಗೆ ಸೇರಿಸಬೇಕು?','upload-sub':'JPG · PNG · WEBP · ಕ್ಯಾಮೆರಾ',
+    'btn.camera':'ಫೋಟೊ ತೆಗೆಯಿರಿ','btn.gallery':'ಗ್ಯಾಲರಿಯಿಂದ ಅಪ್ಲೋಡ್',
+    's2-title':'✏️ ವಿವರ ಖಚಿತಪಡಿಸಿ','s2-sub':'AI ಪತ್ತೆ ಮಾಡಿದ ಮಾಹಿತಿ ತೋರಿಸಲಾಗಿದೆ.',
+    's3-title':'ದೃಢಪಡಿಸಿ ಮತ್ತು ಸಲ್ಲಿಸಿ','s3-disc':'ಫಲಿತಾಂಶ AI ತಪಾಸಣಾ ಸಂಕೇತ, ರೋಗನಿರ್ಣಯ ಅಲ್ಲ.',
+    'step1-next-lbl':'ಮುಂದೆ →','mic-btn-lbl':'ಮಾತನಾಡಿ','ai-disc':'ಬದಲಿಸಲು ಯಾವುದೇ ಆಯ್ಕೆ ಒತ್ತಿ.',
+    'sl-1':'ಫೋಟೊ','sl-2':'ಖಚಿತ','sl-3':'ಸಲ್ಲಿಸಿ',
+    'describe.heading':'🗣️ ನೀವೇ ವಿವರಿಸಿ',
+    'describe.placeholder':'ಉದಾ: ಎಲೆಯಲ್ಲಿ ಕಂದು ಕಲೆ, ಕಾಂಡದಲ್ಲಿ ಬಿಳಿ ಹಿಟ್ಟು…',
+    'loc.detecting':'ಸ್ಥಳ ಪತ್ತೆ ಮಾಡಲಾಗುತ್ತಿದೆ…',
+    'ai.detected':'AI ಪತ್ತೆ ಮಾಡಿದೆ',
+    'ai.disc':'ಬದಲಿಸಲು ಯಾವುದೇ ಆಯ್ಕೆ ಒತ್ತಿ.',
+    'ai.scanning':'🤖 AI ಎಲೆ ವಿಶ್ಲೇಷಿಸುತ್ತಿದೆ…',
+    'ai.confirm':'✅ AI ಪತ್ತೆ ಆಯಿತು — ದೃಢಪಡಿಸಿ →',
+    'ai.low_conf':'⚠️ ಕಡಿಮೆ ವಿಶ್ವಾಸ — ಹಂತ 2 ರಲ್ಲಿ ಖಚಿತಪಡಿಸಿ',
+    'ai.autofill':'✅ ಸ್ವಯಂ ತುಂಬಿದೆ:',
+    'ai.error':'⚠️ ವಿಶ್ಲೇಷಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ — ಕೈಯಾರೆ ಮುಂದುವರಿಸಿ',
+    'ai.tick':'✔ AI ಫಲಿತಾಂಶ ಒಪ್ಪಿ ಸ್ವಯಂ ತುಂಬಿ',
+    'ai.confidence':'ವಿಶ್ವಾಸ',
+    'ai.model':'ಮಾದರಿ',
+    'fu.improved':'ಸುಧಾರಣೆ','fu.stable':'ಹಾಗೇ ಇದೆ','fu.worse':'ಹದಗೆಟ್ಟಿದೆ','fu.unclear':'ಗೊತ್ತಿಲ್ಲ','fu.submit':'ಅನುಸರಣೆ ಸಲ್ಲಿಸಿ',
+    'sum.crop':'ಬೆಳೆ','sum.stage':'ಹಂತ','sum.symptom':'ರೋಗ ಲಕ್ಷಣ','sum.severity':'ತೀವ್ರತೆ',
+    'sum.area':'ಬಾಧಿತ ಪ್ರದೇಶ','sum.rain':'ಮಳೆ','sum.location':'ಸ್ಥಳ','sum.image':'ಚಿತ್ರ',
+    'nearby.label':'ಸಮೀಪದ ರೋಗ ವರದಿಗಳು',
+    'nearby.unit':'ಹತ್ತಿರದ ಪ್ರಕರಣಗಳು',
+    'nearby.hint':'ಈ ವಾರ ನಿಮ್ಮ ಗ್ರಾಮದ ಇತರ ರೈತರು ಇದೇ ಸಮಸ್ಯೆ ವರದಿ ಮಾಡಿದ್ದಾರೆಯೇ? 0 = ಯಾರೂ ಇಲ್ಲ.',
+    'scope.notice':'AI ಮಾದರಿ <strong>ಟೊಮೇಟೊ ಮಾತ್ರ</strong> ತರಬೇತಿ ಪಡೆದಿದೆ (79.5% ನಿಖರತೆ). ಇತರ ಬೆಳೆ → ತಜ್ಞ ಪರಿಶೀಲನೆ. <em>ಪ್ರಾತ್ಯಕ್ಷಿಕೆ — ಕ್ಷೇತ್ರ ಪರೀಕ್ಷಿತ ಅಲ್ಲ.</em>',
+    'upcoming.toast':'🔜 ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ — ಈ ಬೆಳೆಯ AI ಮಾದರಿ ತರಬೇತಿಯಲ್ಲಿದೆ. ನಿಮ್ಮ ಪ್ರಕರಣ ತಜ್ಞ ಅಧಿಕಾರಿಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.',
+  },
+  hi: {
+    'tab.scan':'स्कैन','tab.history':'मेरी रिपोर्ट','tab.followup':'अनुवर्ती','tab.kvk':'KVK हेल्पलाइन','tab.field':'मेरा खेत','tab.tools':'🧮 औज़ार','tab.tips':'सुझाव',
+    'crop.tomato':'टमाटर','crop.potato':'आलू','crop.corn_maize':'मक्का','crop.grape':'अंगूर',
+    'crop.bell_pepper':'शिमला मिर्च','crop.strawberry':'स्ट्रॉबेरी','crop.orange':'संतरा',
+    'crop.soybean':'सोयाबीन','crop.apple':'सेब','crop.other':'अन्य',
+    'stage.seedling':'अंकुर','stage.vegetative':'पत्ते बढ़ना','stage.flowering':'फूल आना',
+    'stage.fruiting':'फल लगना','stage.maturity':'कटाई',
+    'sym.leaf_spots':'पत्ती पर धब्बे','sym.yellowing':'पीला पड़ना','sym.wilting':'मुरझाना',
+    'sym.leaf_curling':'पत्ती मुड़ना','sym.holes':'छेद / कटाव',
+    'sym.powder':'सफेद चूर्ण','sym.stem_rot':'तने का सड़ना','sym.healthy':'स्वस्थ दिखे',
+    'sev.almost_all':'लगभग सब','sev.many':'बहुत','sev.few':'कुछ','sev.unknown':'पता नहीं',
+    'area.few_plants':'कुछ पौधे','area.one_part':'एक भाग','area.much_of_field':'अधिकांश खेत','area.not_sure':'पता नहीं',
+    'rain.yes':'हाँ, बारिश हुई','rain.no':'नहीं, सूखा है',
+    'trap.label':'कीट जाल संख्या',
+    'trap.hint':'पिछले 24 घंटे में आपके चिपचिपे / फेरोमोन जाल से पकड़ी गई कीड़ों की संख्या। 0 = जाल नहीं।',
+    'trap.unit':'कीट पकड़े गए',
+    'btn.back':'← वापस','btn.next':'अगला →','btn.submit':'विश्लेषण के लिए जमा करें',
+    'lbl-crop':'फसल का प्रकार','lbl-stage':'विकास चरण','lbl-symptom':'आप क्या देख रहे हैं?',
+    'lbl-severity':'कितने पौधे प्रभावित?','lbl-rain':'पिछले 48 घंटे बारिश?',
+    'lbl-area':'खेत का कितना भाग प्रभावित?','lbl-known':'इस फसल की सामान्य बीमारियाँ',
+    's1-title':'📷 पत्ती की फ़ोटो अपलोड करें','s1-sub':'स्पष्ट फ़ोटो लें। AI रोग पहचानेगा।',
+    'upload-cta':'फ़ोटो कैसे जोड़ें?','upload-sub':'JPG · PNG · WEBP · कैमरा',
+    'btn.camera':'फ़ोटो लें','btn.gallery':'गैलरी से अपलोड',
+    's2-title':'✏️ विवरण की पुष्टि करें','s2-sub':'AI ने जो पहचाना वह भरा है।',
+    's3-title':'पुष्टि करें और जमा करें','s3-disc':'परिणाम AI संकेत है, पक्का निदान नहीं।',
+    'step1-next-lbl':'अगला →','mic-btn-lbl':'बोलें','ai-disc':'बदलने के लिए कोई विकल्प टैप करें।',
+    'sl-1':'फ़ोटो','sl-2':'पुष्टि','sl-3':'जमा',
+    'describe.heading':'🗣️ खुद बताएं',
+    'describe.placeholder':'जैसे: पत्तियों पर भूरे धब्बे, तने पर सफ़ेद चूर्ण…',
+    'loc.detecting':'स्थान का पता लगाया जा रहा है…',
+    'ai.detected':'AI ने पहचाना',
+    'ai.disc':'बदलने के लिए कोई विकल्प टैप करें।',
+    'ai.scanning':'🤖 AI पत्ती की जांच कर रहा है…',
+    'ai.confirm':'✅ AI ने पहचाना — पुष्टि करें →',
+    'ai.low_conf':'⚠️ कम विश्वास — चरण 2 में मैन्युअल सत्यापन करें',
+    'ai.autofill':'✅ स्वतः भरा गया:',
+    'ai.error':'⚠️ विश्लेषण नहीं हो सका — मैन्युअल जारी रखें',
+    'ai.tick':'✔ AI परिणाम स्वीकार करें और स्वतः भरें',
+    'ai.confidence':'विश्वास',
+    'ai.model':'मॉडल',
+    'fu.improved':'सुधार हुआ','fu.stable':'वही है','fu.worse':'बिगड़ गया','fu.unclear':'पता नहीं','fu.submit':'अनुवर्ती जमा करें',
+    'sum.crop':'फसल','sum.stage':'चरण','sum.symptom':'लक्षण','sum.severity':'गंभीरता',
+    'sum.area':'प्रभावित क्षेत्र','sum.rain':'बारिश','sum.location':'स्थान','sum.image':'चित्र',
+    'nearby.label':'आस-पास की बीमारी की रिपोर्ट',
+    'nearby.unit':'पास के मामले',
+    'nearby.hint':'इस हफ्ते आपके गाँव के कितने किसानों ने ऐसी ही समस्या बताई? 0 = कोई नहीं / पता नहीं।',
+    'scope.notice':'AI मॉडल केवल <strong>टमाटर</strong> पर प्रशिक्षित है (79.5% सटीकता)। अन्य फसलें → विशेषज्ञ समीक्षा। <em>DEMO — क्षेत्र परीक्षण नहीं।</em>',
+    'upcoming.toast':'🔜 जल्द आ रहा है — इस फसल का AI मॉडल प्रशिक्षण में है। आपका मामला विशेषज्ञ अधिकारी को भेजा जाएगा।',
+  }
+};
+
+/* ── Known diseases per crop (research-backed from PlantVillage + ICAR) ── */
+const KNOWN_ISSUES = {
+  tomato: [
+    {emoji:'🍂', label:'Early Blight',          sym:'leaf_spots',    sev:'many',    key:'tomato_early_blight'},
+    {emoji:'🌑', label:'Late Blight',            sym:'leaf_spots',    sev:'many',    key:'tomato_late_blight'},
+    {emoji:'🌀', label:'Leaf Curl Virus',         sym:'leaf_curling',  sev:'few',     key:'tomato_yellow_leaf_curl'},
+    {emoji:'💀', label:'Fusarium Wilt',           sym:'wilting',       sev:'almost_all', key:'tomato_wilt'},
+    {emoji:'🟣', label:'Septoria Leaf Spot',     sym:'leaf_spots',    sev:'few',     key:'tomato_septoria'},
+  ],
+  potato: [
+    {emoji:'🍂', label:'Early Blight',           sym:'leaf_spots',    sev:'many',    key:'potato_early_blight'},
+    {emoji:'🌑', label:'Late Blight',            sym:'leaf_spots',    sev:'almost_all', key:'potato_late_blight'},
+    {emoji:'🔴', label:'Black Scurf',            sym:'stem_rot',      sev:'few',     key:'potato_black_scurf'},
+    {emoji:'⬜', label:'Common Scab',            sym:'leaf_spots',    sev:'few',     key:'potato_scab'},
+    {emoji:'💛', label:'Virus Yellowing',        sym:'yellowing',     sev:'many',    key:'potato_virus'},
+  ],
+  corn_maize: [
+    {emoji:'🍂', label:'Northern Leaf Blight',  sym:'leaf_spots',    sev:'many',    key:'corn_nlb'},
+    {emoji:'🟠', label:'Common Rust',           sym:'powder_coating', sev:'many',   key:'corn_rust'},
+    {emoji:'🔘', label:'Gray Leaf Spot',        sym:'leaf_spots',    sev:'few',     key:'corn_gls'},
+    {emoji:'🦠', label:'Ear Rot',               sym:'leaf_spots',    sev:'almost_all', key:'corn_ear_rot'},
+    {emoji:'⚫', label:'Smut',                  sym:'holes_or_chewing', sev:'few',  key:'corn_smut'},
+  ],
+  grape: [
+    {emoji:'💧', label:'Downy Mildew',          sym:'powder_coating', sev:'many',   key:'grape_downy'},
+    {emoji:'⬜', label:'Powdery Mildew',        sym:'powder_coating', sev:'many',   key:'grape_powdery'},
+    {emoji:'🔵', label:'Botrytis (Grey Mold)', sym:'leaf_spots',    sev:'few',     key:'grape_botrytis'},
+    {emoji:'⚫', label:'Black Rot',             sym:'leaf_spots',    sev:'many',    key:'grape_black_rot'},
+    {emoji:'💛', label:'Leaf Roll Virus',       sym:'leaf_curling',  sev:'almost_all', key:'grape_leafroll'},
+  ],
+  bell_pepper: [
+    {emoji:'🍂', label:'Anthracnose',           sym:'leaf_spots',    sev:'many',    key:'pepper_anthracnose'},
+    {emoji:'🟤', label:'Bacterial Spot',        sym:'leaf_spots',    sev:'few',     key:'pepper_bacterial'},
+    {emoji:'🌀', label:'Leaf Curl Virus',        sym:'leaf_curling',  sev:'many',    key:'pepper_curl'},
+    {emoji:'🔴', label:'Phytophthora Blight',  sym:'wilting',       sev:'almost_all', key:'pepper_phytophthora'},
+    {emoji:'💛', label:'Cercospora Leaf Spot', sym:'leaf_spots',    sev:'few',     key:'pepper_cercospora'},
+  ],
+  strawberry: [
+    {emoji:'⬜', label:'Grey Mold (Botrytis)', sym:'powder_coating', sev:'many',   key:'straw_botrytis'},
+    {emoji:'⬜', label:'Powdery Mildew',       sym:'powder_coating', sev:'few',    key:'straw_powdery'},
+    {emoji:'💛', label:'Leaf Scorch',          sym:'leaf_spots',    sev:'many',    key:'straw_scorch'},
+    {emoji:'🔴', label:'Crown Rot',            sym:'wilting',       sev:'almost_all', key:'straw_crown_rot'},
+    {emoji:'🕳️', label:'Angular Leaf Spot',   sym:'leaf_spots',    sev:'few',     key:'straw_angular'},
+  ],
+  orange: [
+    {emoji:'💛', label:'Citrus Greening (HLB)',sym:'yellowing',     sev:'almost_all', key:'citrus_hlb'},
+    {emoji:'🔴', label:'Citrus Canker',        sym:'leaf_spots',    sev:'many',    key:'citrus_canker'},
+    {emoji:'⚫', label:'Black Spot',           sym:'leaf_spots',    sev:'few',     key:'citrus_black_spot'},
+    {emoji:'🟤', label:'Melanose',             sym:'leaf_spots',    sev:'few',     key:'citrus_melanose'},
+    {emoji:'🔴', label:'Root Rot',             sym:'wilting',       sev:'many',    key:'citrus_root_rot'},
+  ],
+  soybean: [
+    {emoji:'🟠', label:'Soybean Rust',         sym:'powder_coating', sev:'many',   key:'soy_rust'},
+    {emoji:'👁',  label:'Frogeye Leaf Spot',    sym:'leaf_spots',    sev:'few',     key:'soy_frogeye'},
+    {emoji:'💛', label:'Sudden Death Syndrome',sym:'yellowing',     sev:'almost_all', key:'soy_sds'},
+    {emoji:'🔵', label:'Phytophthora Root Rot',sym:'wilting',       sev:'many',    key:'soy_phyto'},
+    {emoji:'🌀', label:'Bean Pod Mottle Virus',sym:'leaf_curling',  sev:'few',     key:'soy_bpmv'},
+  ],
+  apple: [
+    {emoji:'⚫', label:'Apple Scab',           sym:'leaf_spots',    sev:'many',    key:'apple_scab'},
+    {emoji:'🔴', label:'Fire Blight',          sym:'wilting',       sev:'almost_all', key:'apple_fireblight'},
+    {emoji:'⬜', label:'Powdery Mildew',       sym:'powder_coating', sev:'many',   key:'apple_powdery'},
+    {emoji:'🟠', label:'Cedar Apple Rust',     sym:'leaf_spots',    sev:'few',     key:'apple_rust'},
+    {emoji:'🟤', label:'Bitter Rot',           sym:'leaf_spots',    sev:'few',     key:'apple_bitter_rot'},
+  ],
+  other: [
+    {emoji:'🔴', label:'Root Rot',             sym:'wilting',       sev:'many',    key:'generic_root_rot'},
+    {emoji:'🌱', label:'Damping Off',          sym:'wilting',       sev:'almost_all', key:'generic_damping'},
+    {emoji:'🌀', label:'Mosaic Virus',         sym:'leaf_curling',  sev:'many',    key:'generic_mosaic'},
+    {emoji:'💀', label:'Bacterial Wilt',       sym:'wilting',       sev:'almost_all', key:'generic_bact_wilt'},
+    {emoji:'💛', label:'Nutrient Deficiency',  sym:'yellowing',     sev:'few',     key:'generic_nutrient'},
+  ],
+};
+
+/* ── CROP TIPS (from ICAR / PlantVillage research) ── */
+const CROP_TIPS = [
+  {emoji:'🌿', title:'Rotate crops every season',    body:'Avoid growing the same crop in the same field for 2+ consecutive years. This breaks pest and disease cycles, especially for tomato blight and potato scab.'},
+  {emoji:'💧', title:'Water at the base, not leaves', body:'Overhead irrigation wets leaves and promotes fungal diseases like early blight and powdery mildew. Use drip irrigation or water at the soil level.'},
+  {emoji:'🌅', title:'Water in the morning',          body:'Morning watering lets leaves dry out during the day, reducing fungal infection risk. Wet leaves overnight is the #1 cause of grey mold.'},
+  {emoji:'✂️', title:'Remove infected leaves quickly', body:'Bag and remove visibly infected leaves from the field. Do not compost them — this spreads spores. Burn or bury away from the field.'},
+  {emoji:'📏', title:'Maintain plant spacing',        body:'Dense planting reduces air circulation, raising humidity between plants. Good spacing (30-45 cm for tomatoes) dramatically reduces disease pressure.'},
+  {emoji:'🧪', title:'Soil test before applying fertiliser', body:'Over-fertilising with nitrogen makes plants lush but susceptible to aphids and fungal attack. Balanced NPK reduces disease incidence.'},
+  {emoji:'🪲', title:'Scout weekly for pests',        body:'Early detection is the best control. Walk your field each week and look at the underside of leaves for mites, aphids, and whiteflies.'},
+  {emoji:'🌱', title:'Use certified disease-free seeds', body:'Most fungal and bacterial diseases are seed-borne. Always buy seeds from certified suppliers and treat with Thiram or Captan before sowing.'},
+  {emoji:'📸', title:'Document and report early',     body:'Upload a photo using PestPulse as soon as you see the first symptoms. Early AI detection + officer review can prevent 70-80% crop loss.'},
+];
+
+/* ── KVK CONTACTS (shown from config) ── */
+let _kvkContacts = [];
+
+/* ── setLang (nuclear version) ── */
+function setLang(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('pp_lang', lang);
+  // Step 1: remove active from ALL buttons
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  // Step 2: add active ONLY to matching button
+  const target = document.querySelector(`.lang-btn[data-lang="${lang}"]`);
+  if (target) target.classList.add('active');
+  // Step 3: translate everything with data-ik
+  const D = LABELS[lang] || LABELS.en;
+  document.querySelectorAll('[data-ik]').forEach(el => {
+    const v = D[el.dataset.ik];
+    if (v) {
+      // Use innerHTML for values that contain HTML markup
+      if (v.includes('<')) el.innerHTML = v;
+      else el.textContent = v;
+    }
+  });
+  // Step 4: translate id-targeted strings
+  Object.entries(D).forEach(([k,v]) => {
+    const el = document.getElementById(k);
+    if (el && !el.dataset.ik) el.textContent = v;
+  });
+  // Step 5: translate dynamic elements not covered by data-ik
+  // — Describe section heading
+  const descHead = document.querySelector('#symptom-text-input')?.closest('div[style]')?.querySelector('div');
+  if (descHead && D['describe.heading']) descHead.textContent = D['describe.heading'];
+  // — Describe textarea placeholder
+  const descTA = document.getElementById('symptom-text-input');
+  if (descTA && D['describe.placeholder']) descTA.placeholder = D['describe.placeholder'];
+  // — Location pill (only if still showing default text)
+  const locEl = document.getElementById('location-label');
+  if (locEl && !form.location_label && D['loc.detecting']) locEl.textContent = D['loc.detecting'];
+  // — Trap count unit label
+  const trapUnit = document.getElementById('trap-count-disp')?.closest('div')?.querySelector('div');
+  if (trapUnit && D['trap.unit']) trapUnit.textContent = D['trap.unit'];
+  // — AI banner disc text
+  const aiDisc = document.getElementById('ai-disc');
+  if (aiDisc && D['ai.disc']) aiDisc.textContent = D['ai.disc'];
+  // — AI banner title prefix
+  const aiBanner = document.querySelector('#ai-banner h3');
+  if (aiBanner && D['ai.detected']) {
+    const confLbl = document.getElementById('ai-conf-lbl');
+    aiBanner.firstChild.textContent = D['ai.detected'] + ' ';
+    if (confLbl) aiBanner.appendChild(confLbl);
+  }
+  // Step 6: re-render known issues in new language
+  if (_currentCrop) renderKnownIssues(_currentCrop);
+  // Step 7: update voice recognition language
+  if (typeof _updateVoiceLang === 'function') _updateVoiceLang(lang);
+}
+
+/* ── Tab switching ── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-'+tab));
+  if (tab === 'history')  loadHistory();
+  if (tab === 'followup') loadFollowUpCases();
+  if (tab === 'field')    loadFieldIntel();
+  if (tab === 'kvk')      loadKVK();
+  if (tab === 'tips')     renderTips();
+  if (tab === 'tools')    initTools();
+}
+
+/* ── Step navigation ── */
+let currentStep = 1;
+function goStep(n) {
+  if (n === 3) buildSummary();
+  [1,2,3].forEach(i => {
+    document.getElementById(`step-${i}`)?.classList.toggle('hidden', i !== n);
+    const si = document.getElementById(`si-${i}`);
+    if (si) {
+      si.classList.remove('active','complete');
+      if (i < n) si.classList.add('complete');
+      if (i === n) si.classList.add('active');
+    }
+  });
+  currentStep = n;
+  window.scrollTo(0,0);
+  if (n === 2 && _aiDetected) applyAIDetected(_aiDetected);
+}
+
+/* ── Form state ── */
+const form = { crop:null, growth_stage:null, symptom_group:null, severity:null, affected_area_band:null, recent_rain:null, trap_count:null, lat:12.97, lon:77.59 };
+let _aiDetected  = null;
+let _currentCrop = null;
+let selectedFile = null;
+
+/* ── Weather loader ── */
+async function loadWeather() {
+  try {
+    const r = await fetch('/api/v1/weather');
+    if (!r.ok) return;
+    const d = await r.json();
+    const cur = d.current || {};
+    const txt = document.getElementById('weather-text');
+    const badge = document.getElementById('weather-badge');
+    if (txt) {
+      const temp  = cur.temperature_c != null ? `${cur.temperature_c.toFixed(1)}°C` : '';
+      const humid = cur.relative_humidity_pct != null ? `${cur.relative_humidity_pct}% humidity` : '';
+      const rain  = cur.precipitation_mm > 0 ? ` · 🌧️ ${cur.precipitation_mm}mm` : '';
+      txt.textContent = [temp, humid].filter(Boolean).join(' · ') + rain || 'Weather loaded';
+      form.lat = d.latitude  || form.lat;
+      form.lon = d.longitude || form.lon;
+    }
+    if (badge) {
+      const freshness = d.freshness || 'DEMO';
+      const colors = { LIVE:'#00e676', STALE:'#f59e0b', DEMO:'#6366f1', UNAVAILABLE:'#ef4444' };
+      badge.textContent = freshness;
+      badge.style.background = (colors[freshness] || '#6366f1') + '22';
+      badge.style.color = colors[freshness] || '#6366f1';
+      badge.style.border = `1px solid ${colors[freshness] || '#6366f1'}55`;
+    }
+  } catch(_) {
+    const txt = document.getElementById('weather-text');
+    if (txt) txt.textContent = 'Weather unavailable';
+  }
+}
+
+/* ── Follow-up: load cases ── */
+let _fuSelectedCase = null;
+let _fuSelectedOutcome = null;
+
+async function loadFollowUpCases() {
+  const el = document.getElementById('fu-case-list');
+  if (!el) return;
+  try {
+    const r = await fetch('/api/v1/farmer/history?limit=20');
+    const d = await r.json();
+    const items = d.history || [];
+    if (!items.length) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)">📭 No previous scans found.</div>';
+      return;
+    }
+    el.innerHTML = items.map(obs => `
+      <div class="hist-card" onclick="selectFuCase('${obs.id}','${obs.crop||''}','${obs.status||''}')" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <span style="font-weight:700;font-size:0.88rem">${obs.crop||'Unknown crop'}</span>
+          <span class="badge ${obs.status==='resolved'?'badge-green':obs.review_required?'badge-amber':'badge-blue'}">${obs.status||'pending'}</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">${obs.symptom_group||''} · ${obs.severity||''} · ${(obs.created_at||'').slice(0,10)}</div>
+        <div style="font-size:0.72rem;color:var(--text-dim)">ID: ${(obs.id||'').slice(0,8)}</div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--red)">Error loading cases: ${e.message}</div>`;
+  }
+}
+
+function selectFuCase(id, crop, status) {
+  _fuSelectedCase = id;
+  _fuSelectedOutcome = null;
+  document.querySelectorAll('#fu-case-list .hist-card').forEach(c => {
+    c.style.borderColor = c.onclick?.toString().includes(id) ? 'var(--green)' : 'var(--border)';
+  });
+  document.getElementById('fu-outcome-section').style.display = 'block';
+  document.getElementById('fu-result').innerHTML = '';
+  document.querySelectorAll('#fu-outcome-grid .icon-option').forEach(o => o.classList.remove('selected'));
+}
+
+function pickFuOutcome(el) {
+  document.querySelectorAll('#fu-outcome-grid .icon-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  _fuSelectedOutcome = el.dataset.val;
+}
+
+async function submitFollowUp() {
+  if (!_fuSelectedCase)    { showToast('Please select a case first'); return; }
+  if (!_fuSelectedOutcome) { showToast('Please select an outcome'); return; }
+  const btn = document.getElementById('fu-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try {
+    const r = await fetch('/api/v1/followups', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ observation_id: _fuSelectedCase, outcome: _fuSelectedOutcome, note: document.getElementById('fu-note').value || '' })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed');
+    document.getElementById('fu-result').innerHTML = `
+      <div style="background:var(--green-glow);border:1px solid var(--green);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.5rem">✅</div>
+        <div style="font-weight:700;color:var(--green);margin-top:6px">Follow-up submitted!</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">New status: ${d.new_status}</div>
+      </div>`;
+    _fuSelectedCase = null; _fuSelectedOutcome = null;
+  } catch(e) {
+    document.getElementById('fu-result').innerHTML = `<div style="color:var(--red);padding:10px">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    const D = LABELS[currentLanguage] || LABELS.en;
+    btn.textContent = D['fu.submit'] || 'Submit Follow-up';
+  }
+}
+
+/* ── My Field Intelligence ── */
+let _fieldLoaded = false;
+
+async function loadFieldIntel(force) {
+  if (_fieldLoaded && !force) return;  // skip if already loaded unless forced
+  _fieldLoaded = false;
+  const loading = document.getElementById('field-loading');
+  const data    = document.getElementById('field-data');
+  const locTxt  = document.getElementById('field-loc-text');
+  if (loading) loading.style.display = 'block';
+  if (data)    data.style.display    = 'none';
+
+  let lat = form.lat || 12.97;
+  let lon = form.lon || 77.59;
+
+  // Try fresh GPS
+  await new Promise(res => {
+    if (!navigator.geolocation) return res();
+    navigator.geolocation.getCurrentPosition(p => {
+      lat = p.coords.latitude;
+      lon = p.coords.longitude;
+      form.lat = lat; form.lon = lon;
+      res();
+    }, () => res(), { timeout: 5000 });
+  });
+
+  if (locTxt) locTxt.textContent = `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`;
+
+  try {
+    const [fiRes, hsRes] = await Promise.all([
+      fetch(`/api/v1/field-intelligence?lat=${lat}&lon=${lon}`),
+      fetch(`/api/v1/hotspots?days=30&top=8`),
+    ]);
+    const fi = await fiRes.json();
+    const hs = await hsRes.json();
+
+    const soil    = fi.soil    || {};
+    const weather = fi.weather || {};
+    const cur     = weather.current || {};
+    const lang    = currentLanguage || 'en';
+
+    // ── Soil profile ──
+    const ph = soil.phh2o ?? '—';
+    setText('soil-ph', ph !== '—' ? ph.toFixed(1) : '—');
+    const phNote = ph !== '—'
+      ? (ph < 5.5 ? 'Acidic' : ph > 7.5 ? 'Alkaline' : 'Neutral ✓')
+      : '';
+    setText('soil-ph-note', phNote);
+
+    const soilLabel = soil.soil_type_label?.[lang] || soil.soil_type_label?.en || '—';
+    setText('soil-type-lbl', soilLabel);
+
+    const fertScore = soil.fertility_score ?? 0;
+    const fertLabel = soil.fertility_label || {};
+    const fertColor = fertLabel.color || 'var(--green)';
+    setText('soil-fertility-num', fertScore);
+    const fertEl = document.getElementById('soil-fertility-lbl');
+    if (fertEl) { fertEl.textContent = fertLabel[lang] || fertLabel.en || '—'; fertEl.style.color = fertColor; }
+    setText('soil-fert-pct', `${fertScore}/100`);
+    const bar = document.getElementById('soil-fert-bar');
+    if (bar) { bar.style.width = `${fertScore}%`; bar.style.background = fertColor; }
+
+    setText('soil-water', soil.water_retention || '—');
+    setText('soil-clay',  (soil.clay_pct ?? '—').toString());
+    setText('soil-sand',  (soil.sand_pct ?? '—').toString());
+    setText('soil-soc',   (soil.soc ?? '—').toString());
+    setText('soil-n',     (soil.nitrogen ?? '—').toString());
+
+    // Source badge
+    const badge = document.getElementById('soil-source-badge');
+    if (badge) {
+      const src = soil.source || 'DEMO';
+      badge.textContent = src;
+      badge.style.background = src === 'SOILGRIDS' ? 'var(--green-glow)' : '#6366f122';
+      badge.style.color      = src === 'SOILGRIDS' ? 'var(--green)'      : '#6366f1';
+    }
+
+    // ── Disease risks ──
+    const riskEl = document.getElementById('disease-risk-list');
+    if (riskEl) {
+      const risks = soil.disease_risks || [];
+      riskEl.innerHTML = risks.map(r => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;
+             background:var(--bg-card-2);border-radius:10px;margin-bottom:8px;
+             border-left:3px solid ${r.color}">
+          <span style="font-size:1.1rem;flex-shrink:0">
+            ${ r.risk==='HIGH'?'🔴': r.risk==='MEDIUM'?'🟠':'🟢' }
+          </span>
+          <div>
+            <div style="font-weight:700;font-size:0.85rem;color:var(--text)">${r.disease}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;line-height:1.5">${r.reason}</div>
+            <span style="font-size:0.65rem;font-weight:700;color:${r.color};border:1px solid ${r.color}44;
+                  background:${r.color}11;border-radius:8px;padding:1px 6px;margin-top:4px;display:inline-block">
+              ${r.risk} RISK
+            </span>
+          </div>
+        </div>`).join('') || '<div style="color:var(--text-dim);font-size:0.8rem;padding:8px">No risk data available.</div>';
+    }
+
+    // ── Hotspots ──
+    const hsEl = document.getElementById('hotspot-list');
+    if (hsEl) {
+      const clusters = hs.clusters || [];
+      if (!clusters.length) {
+        hsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--green);font-size:0.82rem">✅ No active hotspots in the last 30 days.</div>';
+      } else {
+        hsEl.innerHTML = clusters.map(c => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;
+               background:var(--bg-card-2);border-radius:10px;margin-bottom:8px;
+               border-left:3px solid ${c.risk?.color || '#6366f1'}">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:0.85rem;color:var(--text)">${c.crop || '—'} · ${c.symptom_group || '—'}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">
+                📍 ${c.district || 'Unknown district'} · ${c.case_count} case${c.case_count>1?'s':''}
+                ${c.urgent_count > 0 ? `· ⚠️ ${c.urgent_count} urgent` : ''}
+              </div>
+              <div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px">Last report: ${(c.latest_report||'').slice(0,10)}</div>
+            </div>
+            <span style="font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:10px;
+                  color:${c.risk?.color};background:${c.risk?.color}18;border:1px solid ${c.risk?.color}44;
+                  flex-shrink:0">${c.risk?.label||'—'}</span>
+          </div>`).join('');
+      }
+    }
+
+    // ── Crop recommendations ──
+    const cropEl = document.getElementById('crop-rec-list');
+    if (cropEl) {
+      const crops = soil.recommended_crops || [];
+      cropEl.innerHTML = crops.length
+        ? crops.map(cr => `
+          <div style="background:var(--bg-card-2);border:1px solid var(--border);border-radius:10px;
+               padding:12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.8rem">${cr.icon}</span>
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--text)">${cr.name[lang] || cr.name.en}</div>
+              <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">pH ${cr.ph_range}</div>
+              <div style="height:4px;background:var(--border);border-radius:2px;margin-top:5px;width:60px">
+                <div style="height:4px;background:var(--green);border-radius:2px;width:${cr.suitability}%"></div>
+              </div>
+            </div>
+          </div>`).join('')
+        : '<div style="color:var(--text-dim);font-size:0.8rem">No crop data available for this soil.</div>';
+    }
+
+    // ── Weather detail ──
+    setText('wf-temp',  cur.temperature_c != null        ? `${cur.temperature_c.toFixed(1)}°C` : '—');
+    setText('wf-humid', cur.relative_humidity_pct != null ? `${cur.relative_humidity_pct}%`      : '—');
+    setText('wf-rain',  cur.precipitation_mm != null      ? `${cur.precipitation_mm} mm`         : '—');
+
+    if (loading) loading.style.display = 'none';
+    if (data)    data.style.display    = 'block';
+    _fieldLoaded = true;
+
+  } catch(e) {
+    if (loading) loading.innerHTML = `<div style="color:var(--red);padding:20px">Error loading field data: ${e.message}</div>`;
+  }
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val ?? '—';
+}
+
+/* ── Icon pickers ── */
+window.pick = function(field, el) {
+  el.closest('.icon-grid')?.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  form[field] = el.dataset.val;
+  if (field === 'crop') { _currentCrop = el.dataset.val; renderKnownIssues(el.dataset.val); }
+};
+window.pickSev = function(el) {
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  form.severity = el.dataset.val;
+};
+window.pickRain = function(el) {
+  document.querySelectorAll('.rain-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  form.recent_rain = el.dataset.val;
+};
+
+/* ── Known issues chips ── */
+function renderKnownIssues(crop) {
+  const issues = KNOWN_ISSUES[crop] || KNOWN_ISSUES.other;
+  const sec  = document.getElementById('known-issues-section');
+  const cont = document.getElementById('known-issues-chips');
+  if (!sec || !cont) return;
+  cont.innerHTML = issues.map(iss => `
+    <div class="issue-chip" onclick="applyKnownIssue('${iss.sym}','${iss.sev}',this)">
+      <span class="chip-em">${iss.emoji}</span>${iss.label}
+    </div>`).join('');
+  sec.style.display = 'block';
+}
+window.applyKnownIssue = function(sym, sev, chipEl) {
+  document.querySelectorAll('.issue-chip').forEach(c => c.classList.remove('selected'));
+  chipEl.classList.add('selected');
+  // Select symptom
+  const symOpt = document.querySelector(`#symptom-grid .icon-option[data-val="${sym}"]`);
+  if (symOpt) { document.querySelectorAll('#symptom-grid .icon-option').forEach(o=>o.classList.remove('selected')); symOpt.classList.add('selected'); form.symptom_group = sym; }
+  // Select severity
+  const sevOpt = document.querySelector(`.sev-btn[data-val="${sev}"]`);
+  if (sevOpt) { document.querySelectorAll('.sev-btn').forEach(b=>b.classList.remove('selected')); sevOpt.classList.add('selected'); form.severity = sev; }
+};
+
+/* ── AI auto-detect on image upload ── */
+let _aiAccepted = false;  // tracks whether user ticked the AI result
+
+window.onFileSelected = async function(e) {
+  if (!e.target.files[0]) return;
+  selectedFile = e.target.files[0];
+
+  // ── Reset ALL previous AI state first ──────────────────────
+  _aiDetected  = null;
+  _aiAccepted  = false;
+  document.getElementById('upload-preview').classList.remove('hidden');
+  document.getElementById('preview-img').src = URL.createObjectURL(selectedFile);
+  document.getElementById('upload-zone').classList.add('hidden');
+
+  // Hide step1-next until inference completes
+  const nx  = document.getElementById('step1-next');
+  const lbl = document.getElementById('step1-next-lbl');
+  if (nx)  nx.disabled = true;
+  if (lbl) lbl.textContent = '⏳';
+
+  const ir = document.getElementById('infer-result');
+  const D  = LABELS[currentLanguage] || LABELS.en;
+
+  // Show spinner
+  if (ir) ir.innerHTML = `
+    <div class="infer-card" style="display:flex;align-items:center;gap:12px">
+      <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+      <span>${D['ai.scanning'] || '🤖 AI scanning leaf…'}</span>
+    </div>`;
+
+  try {
+    const fd = new FormData();
+    fd.append('image', selectedFile, selectedFile.name);
+    const [res] = await Promise.all([
+      fetch('/api/v1/quick-infer', { method:'POST', body:fd }),
+      new Promise(r => setTimeout(r, 600)) // UX delay
+    ]);
+    const data = await res.json();
+    const pred = data.prediction || {};
+    const conf = pred.confidence || 0;
+    const name = pred.display_name || 'Unknown';
+    const pct  = Math.round(conf * 100);
+    _aiDetected = data.auto_fill || {};
+    const hasAI = Object.keys(_aiDetected).length > 0;
+
+    const cls = conf >= 0.7 ? 'green' : 'amber';
+    const lowConfHtml = pct < 60
+      ? `<div class="disclaimer">${D['ai.low_conf'] || '⚠️ Low confidence — verify manually'}</div>` : '';
+    const autofillHtml = hasAI
+      ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--green)">${D['ai.autofill'] || '✅ Auto-filled:'} ${Object.keys(_aiDetected).join(', ')}</div>` : '';
+
+    // Tick checkbox to accept/reject AI result
+    const tickHtml = hasAI ? `
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;
+        font-size:0.82rem;color:var(--text);background:var(--bg-card);
+        border:2px solid var(--green);border-radius:10px;padding:8px 12px">
+        <input type="checkbox" id="ai-accept-tick" onchange="toggleAIAccept(this.checked)"
+          style="width:18px;height:18px;cursor:pointer;accent-color:var(--green)">
+        <span id="ai-tick-lbl">${D['ai.tick'] || '✔ Accept AI result and auto-fill'}</span>
+      </label>` : '';
+
+    if (ir) ir.innerHTML = `
+      <div class="infer-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="disease-name">🤖 ${name}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">
+              ${D['ai.confidence'] || 'Confidence'}: ${pct}% · ${D['ai.model'] || 'Model'}: ${data.provider || 'TF_LOCAL'}
+            </div>
+          </div>
+          <span class="ai-badge" style="color:var(--${cls})">${pct}%</span>
+        </div>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar" style="width:${pct}%;background:var(--${cls})"></div>
+        </div>
+        ${lowConfHtml}
+        ${autofillHtml}
+        ${tickHtml}
+      </div>`;
+
+    // Update next button
+    if (nx) nx.disabled = false;
+    if (lbl) lbl.textContent = D['btn.next'] || 'Next →';
+
+  } catch(err) {
+    _aiDetected = null;
+    if (ir) ir.innerHTML = `<div class="infer-card"><div class="disclaimer">${D['ai.error'] || '⚠️ Could not analyse — proceed manually'} (${err.message})</div></div>`;
+    if (nx) nx.disabled = false;
+    if (lbl) lbl.textContent = D['btn.next'] || 'Next →';
+  }
+};
+
+/* Tick/untick: accept or reject AI auto-fill */
+window.toggleAIAccept = function(checked) {
+  _aiAccepted = checked;
+  const D = LABELS[currentLanguage] || LABELS.en;
+  const lbl = document.getElementById('step1-next-lbl');
+  if (lbl) lbl.textContent = checked
+    ? (D['ai.confirm'] || '✅ AI detected — Confirm →')
+    : (D['btn.next']   || 'Next →');
+};
+
+window.removeImage = function() {
+  selectedFile = null;
+  _aiDetected  = null;
+  _aiAccepted  = false;
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-preview').classList.add('hidden');
+  document.getElementById('upload-zone').classList.remove('hidden');
+  const ir = document.getElementById('infer-result');
+  if (ir) ir.innerHTML = '';
+  const nx  = document.getElementById('step1-next');
+  const lbl = document.getElementById('step1-next-lbl');
+  if (nx)  nx.disabled = false;
+  const D = LABELS[currentLanguage] || LABELS.en;
+  if (lbl) lbl.textContent = D['btn.next'] || 'Next →';
+};
+
+/* Apply AI result to form fields — only if tick was checked */
+function applyAIDetected(detected) {
+  if (!detected || !Object.keys(detected).length) return;
+  // Only auto-apply if user ticked the accept checkbox
+  if (!_aiAccepted) return;
+
+  const GRID = { crop:'crop-grid', growth_stage:'stage-grid', symptom_group:'symptom-grid' };
+  Object.entries(detected).forEach(([field, val]) => {
+    if (field === 'severity') {
+      const b = document.querySelector(`.sev-btn[data-val="${val}"]`);
+      if (b) { document.querySelectorAll('.sev-btn').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); form.severity = val; }
+      return;
+    }
+    const gid = GRID[field];
+    if (!gid) return;
+    const opt = document.querySelector(`#${gid} .icon-option[data-val="${val}"]`);
+    if (opt) {
+      document.querySelectorAll(`#${gid} .icon-option`).forEach(x=>x.classList.remove('selected'));
+      opt.classList.add('selected');
+      form[field] = val;
+      if (field === 'crop') { _currentCrop = val; renderKnownIssues(val); }
+    }
+  });
+
+  // Show banner with translated field labels
+  const banner = document.getElementById('ai-banner');
+  const tags   = document.getElementById('ai-tags');
+  if (banner && tags) {
+    const D = LABELS[currentLanguage] || LABELS.en;
+    const FL = {
+      crop:         D['sum.crop']    || 'Crop',
+      symptom_group:D['sum.symptom'] || 'Symptom',
+      severity:     D['sum.severity']|| 'Severity',
+      growth_stage: D['sum.stage']   || 'Stage',
+    };
+    tags.innerHTML = Object.entries(detected).map(([k,v]) => {
+      const displayVal = D[`crop.${v}`] || D[`sym.${v}`] || D[`sev.${v}`] || D[`stage.${v}`] || v;
+      return `<span class="ai-tag">✅ ${FL[k]||k}: <strong>${displayVal}</strong></span>`;
+    }).join('');
+    banner.classList.remove('hidden');
+  }
+}
+
+/* ── Voice ── */
+window.toggleMic = function() {
+  const btn    = document.getElementById('mic-btn');
+  const status = document.getElementById('mic-status');
+  if (btn) btn.dataset.defaultLabel = '🎤';
+
+  // Override the global startVoiceInput callback to also update our textarea + form
+  const origOnFinal = window._voiceOnFinal;
+  window._voiceOnFinal = function(transcript) {
+    // Store transcript in the text area so user can see it
+    const ta = document.getElementById('symptom-text-input');
+    if (ta) ta.value = transcript;
+    // Map transcript to symptom_group keyword if recognizable
+    onSymptomTextInput(transcript);
+    if (status) {
+      status.style.display = 'block';
+      status.textContent = '✅ Saved: "' + transcript + '"';
+    }
+  };
+  startVoiceInput(btn, status);
+};
+
+/* ── Trap count stepper ── */
+window.stepTrap = function(delta) {
+  const inp  = document.getElementById('trap-count');
+  const disp = document.getElementById('trap-count-disp');
+  if (!inp) return;
+  let val = parseInt(inp.value || '0') + delta;
+  if (val < 0) val = 0;
+  inp.value = val;
+  if (disp) disp.textContent = val;
+  form.trap_count = val > 0 ? val : null;
+};
+
+window.stepNearby = function(delta) {
+  const inp  = document.getElementById('nearby-count');
+  const disp = document.getElementById('nearby-count-disp');
+  if (!inp) return;
+  let val = parseInt(inp.value || '0') + delta;
+  if (val < 0) val = 0;
+  inp.value = val;
+  if (disp) disp.textContent = val;
+  form.nearby_count = val;
+};
+
+/* Upcoming-crop click: select it (routes to expert review) + show informational toast */
+window.pickUpcoming = function(cropVal, el) {
+  const D = LABELS[currentLanguage] || LABELS.en;
+  // Still mark it selected so it submits (goes to expert review path)
+  pick('crop', el);
+  const msg = D['upcoming.toast'] ||
+    '🔜 Coming soon — your case will go to an expert officer for review.';
+  showToast(msg, 'amber');
+};
+
+/* ── Symptom text input → auto-map to symptom_group ── */
+window.onSymptomTextInput = function(text) {
+  if (!text || text.length < 3) return;
+  const t = text.toLowerCase();
+  // Simple keyword → form value mapping
+  const MAP = [
+    ['spot|blight|brown|dark patch|lesion',          'leaf_spots'],
+    ['yellow|pale|chloro',                            'yellowing'],
+    ['wilt|droop|collapse|limp',                      'wilting'],
+    ['curl|roll|twisted|crinkle',                     'leaf_curling'],
+    ['hole|eaten|chew|insect|bite|caterpillar',       'holes_or_chewing'],
+    ['white powder|mildew|dust|chalky|coating',       'powder_coating'],
+    ['stem rot|black stem|base rot|crown rot',        'stem_rot'],
+    ['healthy|fine|good|normal|no issue|no problem',  'none_visible'],
+  ];
+  for (const [pattern, val] of MAP) {
+    if (new RegExp(pattern).test(t)) {
+      form.symptom_group = val;
+      // Highlight the matching chip
+      document.querySelectorAll('#symptom-grid .icon-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.val === val);
+      });
+      break;
+    }
+  }
+};
+
+/* ── Summary ── */
+function buildSummary() {
+  const el = document.getElementById('summary-card');
+  if (!el) return;
+  const L = LABELS[currentLanguage] || LABELS.en;
+  const latStr  = form.lat ? form.lat.toFixed(4) : '—';
+  const lonStr  = form.lon ? form.lon.toFixed(4) : '—';
+  const locLabel = form.location_label || `${latStr}, ${lonStr}`;
+
+  // Translate values using LABELS dictionary
+  const tv = key => L[key] || key;
+
+  const rows = [
+    ['🌾', L['sum.crop']     || 'Crop',          tv(`crop.${form.crop}`)          || form.crop          || '—'],
+    ['📅', L['sum.stage']    || 'Stage',          tv(`stage.${form.growth_stage}`) || form.growth_stage   || '—'],
+    ['🔍', L['sum.symptom']  || 'Symptom',        tv(`sym.${form.symptom_group}`)  || form.symptom_group  || '—'],
+    ['⚠️', L['sum.severity'] || 'Severity',       tv(`sev.${form.severity}`)       || form.severity       || '—'],
+    ['🗺️', L['sum.area']     || 'Affected Area',  tv(`area.${form.affected_area_band}`) || form.affected_area_band || '—'],
+    ['🌧️', L['sum.rain']     || 'Rain',           form.recent_rain === 'yes' ? (L['rain.yes'] || 'Yes') : form.recent_rain === 'no' ? (L['rain.no'] || 'No') : form.recent_rain || '—'],
+    ['📍', L['sum.location'] || 'Location',       locLabel],
+    ['📷', L['sum.image']    || 'Image',           selectedFile ? selectedFile.name : '—'],
+  ];
+  el.innerHTML = rows.map(([i,k,v]) =>
+    `<div class="sum-row"><span style="color:var(--text-muted)">${i} ${k}</span><span style="font-weight:700">${v}</span></div>`
+  ).join('');
+}
+
+/* ── Submit ── */
+let _submitting = false;
+window.submitTriage = async function() {
+  if (_submitting) return;   // prevent double-submit
+  _submitting = true;
+
+  const btn = document.getElementById('submit-btn');
+  const lbl = document.getElementById('submit-lbl');
+  if (btn) btn.disabled = true;
+  if (lbl) lbl.textContent = '⏳ Submitting…';
+  showLoading();
+
+  // Stable event ID so repeated clicks are idempotent server-side
+  if (!form._eventId) form._eventId = crypto.randomUUID ? crypto.randomUUID() : `e${Date.now()}`;
+
+  const fd = new FormData();
+  fd.append('crop',             form.crop || 'unknown');
+  fd.append('growth_stage',     form.growth_stage || 'vegetative');
+  fd.append('symptom_group',    form.symptom_group || 'leaf_spots');
+  fd.append('severity',         form.severity || 'unknown');
+  fd.append('recent_rain',      form.recent_rain || 'unknown');
+  fd.append('affected_area',    form.affected_area_band || 'unknown');
+  fd.append('lat',              form.lat || 12.97);
+  fd.append('lon',              form.lon || 77.59);
+  fd.append('language',         currentLanguage);
+  fd.append('client_event_id',  form._eventId);
+  if (form.trap_count)   fd.append('trap_count',   form.trap_count);
+  if (form.nearby_count) fd.append('nearby_count', form.nearby_count);
+  if (selectedFile)          fd.append('image', selectedFile, selectedFile.name);
+
+  try {
+    const data = await API.post('/api/v1/observations', fd, true);
+    hideLoading();
+
+    // Guard against undefined ID before redirecting
+    const obsId = data && data.observation_id;
+    if (!obsId || obsId === 'undefined') {
+      throw new Error('Server returned no observation ID. Please try again.');
+    }
+    window.location.href = `/result?id=${obsId}`;
+  } catch(err) {
+    hideLoading();
+    _submitting = false;
+    if (btn) btn.disabled = false;
+    if (lbl) lbl.textContent = LABELS[currentLanguage]?.['btn.submit'] || 'Submit for Analysis';
+    showToast(`❌ ${err.message}`, 'red');
+  }
+};
+
+/* ── History tab ── */
+async function loadHistory() {
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  try {
+    const data = await API.get('/api/v1/farmer/history');
+    if (!data.history.length) {
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">📭 No reports yet. Start a scan!</div>`;
+      return;
+    }
+    el.innerHTML = data.history.map(h => {
+      const cls = statusColor(h.status);
+      const sc  = h.triage_score ? (h.triage_score*100).toFixed(0)+'%' : '—';
+      const dt  = h.created_at ? new Date(h.created_at).toLocaleDateString() : '—';
+      return `<div class="hist-card" onclick="window.location='/result?id=${h.id}'">
+        <div>
+          <div style="font-weight:700">${h.crop||'?'} — ${h.symptom_group||'?'}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">${dt} · Severity: ${h.severity||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="badge badge-${cls}" style="font-size:0.7rem;padding:3px 10px">${statusLabel(h.status)}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Score: ${sc}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted)">⚠️ Could not load reports.</div>`;
+  }
+}
+
+/* ── KVK tab ── */
+async function loadKVK() {
+  const el = document.getElementById('kvk-list');
+  if (!el) return;
+  if (_kvkContacts.length) { renderKVK(_kvkContacts, el); return; }
+  try {
+    const data = await API.get('/api/v1/kvk');
+    _kvkContacts = data.contacts || [];
+    renderKVK(_kvkContacts, el);
+  } catch {
+    // Fallback
+    _kvkContacts = [
+      {name:'KVK Bengaluru (GKVK)',   phone:'080-23333100', district:'Bengaluru Rural',   state:'Karnataka'},
+      {name:'KVK Tumkur',             phone:'0816-2277555', district:'Tumkur',             state:'Karnataka'},
+      {name:'KVK Hassan',             phone:'08172-268030', district:'Hassan',             state:'Karnataka'},
+      {name:'KVK Mysuru (UAS)',       phone:'0821-2517337', district:'Mysuru',             state:'Karnataka'},
+      {name:'KVK Chikkaballapur',     phone:'08156-272005', district:'Chikkaballapur',     state:'Karnataka'},
+      {name:'KVK Ramanagara',         phone:'080-27272200', district:'Ramanagara',         state:'Karnataka'},
+      {name:'ICAR Helpline (National)','phone':'1800-180-1551', district:'All India',      state:'India'},
+    ];
+    renderKVK(_kvkContacts, el);
+  }
+}
+
+function renderKVK(contacts, el) {
+  el.innerHTML = contacts.map(c => `
+    <div class="kvk-card">
+      <div>
+        <div class="kvk-name">${c.name}</div>
+        <div class="kvk-loc">📍 ${c.district||''}, ${c.state||''}</div>
+        ${c.phone ? `<div style="font-size:0.78rem;color:var(--green);margin-top:4px">📞 ${c.phone}</div>` : ''}
+      </div>
+      <div class="kvk-actions">
+        ${c.phone ? `<a href="tel:${c.phone.replace(/[-\s]/g,'')}" class="btn btn-primary btn-sm">📞 Call</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+/* ── Tips tab ── */
+function renderTips() {
+  const el = document.getElementById('tips-list');
+  if (!el || el.innerHTML.trim()) return;
+  el.innerHTML = CROP_TIPS.map(t => `
+    <div class="tip-card">
+      <div class="tip-title">${t.emoji} ${t.title}</div>
+      <div class="tip-body">${t.body}</div>
+    </div>`).join('');
+}
+
+/* ── GPS ── */
+function initGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    form.lat = pos.coords.latitude;
+    form.lon = pos.coords.longitude;
+    // Show coordinates immediately on location indicator
+    const locEl = document.getElementById('location-label');
+    if (locEl) locEl.textContent = `${form.lat.toFixed(4)}, ${form.lon.toFixed(4)}`;
+    // Reverse geocode via OpenStreetMap Nominatim (free, no API key)
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${form.lat}&lon=${form.lon}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const geo = await r.json();
+      const a = geo.address || {};
+      const label = [
+        a.village || a.town || a.suburb || a.county || '',
+        a.state_district || a.district || '',
+        a.state || '',
+      ].filter(Boolean).join(', ') || `${form.lat.toFixed(2)}, ${form.lon.toFixed(2)}`;
+      form.location_label = label;
+      if (locEl) locEl.textContent = `📍 ${label}`;
+    } catch(_) {
+      form.location_label = `${form.lat.toFixed(4)}, ${form.lon.toFixed(4)}`;
+    }
+  }, () => {
+    // GPS denied — keep Bengaluru defaults
+    form.lat = 12.97; form.lon = 77.59;
+    form.location_label = 'Bengaluru (default)';
+  });
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(currentLanguage);
+  initGPS();
+  goStep(1);
+  loadWeather();
+  loadNeighbourAlert();
+  document.getElementById('trap-count')?.addEventListener('input', e => { form.trap_count = parseInt(e.target.value)||null; });
+});
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   AGRITOOLS — Fertilizer · Pesticide · Profitability Calculators
+   All data from ICAR / CIB&RC tables served by /api/v1/tools/*
+   ══════════════════════════════════════════════════════════════════ */
+
+let _toolsInited = false;
+
+/* ── Tool pill switcher ─────────────────────────────────────── */
+window.switchTool = function(name, el) {
+  document.querySelectorAll('.tool-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  ['fertilizer','pesticide','profit'].forEach(t => {
+    document.getElementById('tool-'+t).style.display = t === name ? '' : 'none';
+  });
+};
+
+/* ── Area stepper (shared) ──────────────────────────────────── */
+window.stepArea = function(inputId, delta) {
+  const inp  = document.getElementById(inputId);
+  const disp = document.getElementById(inputId + '-disp');
+  if (!inp) return;
+  let val = parseFloat(inp.value) + delta;
+  if (val < 0.5) val = 0.5;
+  val = Math.round(val * 2) / 2;   // 0.5 steps
+  inp.value = val;
+  if (disp) disp.textContent = val.toFixed(1);
+  // Trigger recalc
+  if (inputId === 'fc-area') calcFertilizer();
+  if (inputId === 'pc-area') calcPesticide();
+  if (inputId === 'pr-area') calcProfit();
+};
+
+/* ── Buy-link HTML helper ───────────────────────────────────── */
+function buyLinksHTML(links) {
+  if (!links) return '';
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+    <a href="${links.agribazaar}" target="_blank" class="buy-btn">🌾 Agribazaar</a>
+    <a href="${links.amazon}"     target="_blank" class="buy-btn">📦 Amazon</a>
+    <a href="${links.indiaMart}"  target="_blank" class="buy-btn">🏪 IndiaMART</a>
+  </div>`;
+}
+
+/* ══ FERTILIZER CALCULATOR ════════════════════════════════════ */
+window.calcFertilizer = async function() {
+  const crop  = document.getElementById('fc-crop')?.value  || 'tomato';
+  const stage = document.getElementById('fc-stage')?.value || 'vegetative';
+  const area  = document.getElementById('fc-area')?.value  || '1.0';
+  const unit  = document.querySelector('input[name="fc-unit"]:checked')?.value || 'acre';
+  const el    = document.getElementById('fc-result');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Calculating…</div>`;
+  try {
+    const d = await API.get(`/api/v1/tools/fertilizer?crop=${crop}&stage=${stage}&area=${area}&unit=${unit}`);
+    const NUT = {N:'Nitrogen', P:'Phosphorus', K:'Potassium'};
+    const CLR = {N:'#22c55e', P:'#3b82f6', K:'#f59e0b'};
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:12px;border-color:var(--green-border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Total cost estimate</div>
+            <div style="font-size:1.8rem;font-weight:900;color:var(--green)">₹${d.total_cost_inr.toLocaleString()}</div>
+          </div>
+          <div style="text-align:right;font-size:0.75rem;color:var(--text-muted)">
+            ${area} ${unit}<br>${d.area_ha.toFixed(2)} ha
+          </div>
+        </div>
+        ${['N','P','K'].map(n => {
+          const nu = d.nutrients[n];
+          return `<div class="nutrient-card">
+            <div class="nutrient-label" style="color:${CLR[n]}">${NUT[n]} (${n})</div>
+            <div class="nutrient-value" style="color:${CLR[n]}">${nu.product_kg} kg</div>
+            <div class="nutrient-sub">${nu.product} · ₹${nu.cost_inr} · Pure ${nu.pure_kg}kg</div>
+            ${buyLinksHTML(nu.buy_links)}
+          </div>`;
+        }).join('')}
+        <div class="disclaimer" style="margin-top:10px">
+          📋 ${d.application_note}
+        </div>
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:8px;text-align:right">${d.source}</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="disclaimer">⚠️ Could not load: ${e.message}</div>`;
+  }
+};
+
+/* ══ PESTICIDE CALCULATOR ════════════════════════════════════= */
+let _pcProducts = [];
+
+async function loadPcProducts() {
+  const disease = document.getElementById('pc-disease')?.value || 'leaf_spots';
+  try {
+    const d = await API.get(`/api/v1/tools/pesticide?disease=${disease}&area=1&unit=acre&product_idx=0`);
+    _pcProducts = d.all_products || [];
+    const sel = document.getElementById('pc-product-idx');
+    if (!sel) return;
+    sel.innerHTML = _pcProducts.map(p => `<option value="${p.idx}">${p.name}</option>`).join('');
+    calcPesticide();
+  } catch(e) { console.warn('pc products:', e); }
+}
+
+window.calcPesticide = async function() {
+  const disease = document.getElementById('pc-disease')?.value || 'leaf_spots';
+  const pidx    = document.getElementById('pc-product-idx')?.value || '0';
+  const area    = document.getElementById('pc-area')?.value || '1.0';
+  const unit    = document.querySelector('input[name="pc-unit"]:checked')?.value || 'acre';
+  const el      = document.getElementById('pc-result');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Calculating…</div>`;
+  try {
+    const d = await API.get(`/api/v1/tools/pesticide?disease=${disease}&area=${area}&unit=${unit}&product_idx=${pidx}`);
+    el.innerHTML = `
+      <div class="card" style="border-color:var(--green-border)">
+        <div style="font-size:0.78rem;color:var(--green);font-weight:700;margin-bottom:12px">🧪 ${d.product}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="text-align:center;background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div class="result-headline">${d.total_product}</div>
+            <div class="result-sub">Total ${d.unit_type}</div>
+          </div>
+          <div style="text-align:center;background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div class="result-headline">${d.dose_per_pump}</div>
+            <div class="result-sub">ml/pump load</div>
+          </div>
+          <div style="text-align:center;background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div class="result-headline">${d.pump_refills}</div>
+            <div class="result-sub">refills (16L)</div>
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;line-height:1.6">
+          📍 <strong>Application:</strong> ${d.apply_on}
+        </div>
+        ${d.safety_days > 0 ? `<div class="disclaimer">⚠️ Do not harvest within <strong>${d.safety_days} days</strong> of last spray.</div>` : ''}
+        <div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted)">Est. cost: ₹${d.cost_estimate_inr} · Water needed: ${d.water_needed_L}L</div>
+        ${buyLinksHTML(d.buy_links)}
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:8px;text-align:right">${d.source}</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="disclaimer">⚠️ ${e.message}</div>`;
+  }
+};
+
+// When disease changes, reload product list then recalc
+document.getElementById('pc-disease')?.addEventListener('change', loadPcProducts);
+
+/* ══ PROFITABILITY CALCULATOR ════════════════════════════════= */
+window.calcProfit = async function() {
+  const crop  = document.getElementById('pr-crop')?.value  || 'tomato';
+  const area  = document.getElementById('pr-area')?.value  || '1.0';
+  const unit  = document.querySelector('input[name="pr-unit"]:checked')?.value || 'acre';
+  const price = document.getElementById('pr-price')?.value || '0';
+  const extra = document.getElementById('pr-extra')?.value || '0';
+  const el    = document.getElementById('pr-result');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted)"><div class="spinner" style="width:24px;height:24px;margin:0 auto 8px"></div>Calculating…</div>`;
+  try {
+    const d = await API.get(`/api/v1/tools/economics?crop=${crop}&area=${area}&unit=${unit}&sell_price=${price}&extra_cost=${extra}`);
+    const isProfit = d.net_profit_inr >= 0;
+    const profitColor = isProfit ? 'var(--green)' : 'var(--red,#ef4444)';
+    const barPct = Math.min(Math.abs(d.roi_pct), 200) / 2;   // 0–100% visual
+    el.innerHTML = `
+      <div class="card" style="border-color:${profitColor}40">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:14px">
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px">Estimated revenue</div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--text)">₹${d.total_revenue_inr.toLocaleString()}</div>
+          </div>
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:14px">
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px">Total cost</div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--text)">₹${d.total_cost_inr.toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="text-align:center;background:var(--bg-card-2);border-radius:12px;padding:18px;margin-bottom:14px">
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px">${isProfit ? '🟢 Net Profit' : '🔴 Net Loss'}</div>
+          <div style="font-size:2.6rem;font-weight:900;color:${profitColor}">
+            ${isProfit ? '+' : ''}₹${Math.abs(d.net_profit_inr).toLocaleString()}
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">ROI: ${d.roi_pct}%</div>
+          <div class="profit-bar-wrap" style="margin-top:12px">
+            <div class="profit-bar" style="width:${barPct}%;background:${profitColor}"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div style="font-size:0.68rem;color:var(--text-muted)">Break-even price</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--text)">₹${d.breakeven_price_per_kg}/kg</div>
+          </div>
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div style="font-size:0.68rem;color:var(--text-muted)">Required yield</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--text)">${(d.required_yield_kg/1000).toFixed(1)} tonnes</div>
+          </div>
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div style="font-size:0.68rem;color:var(--text-muted)">Max input budget</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--text)">₹${d.max_input_budget_inr.toLocaleString()}</div>
+          </div>
+          <div style="background:var(--bg-card-2);border-radius:10px;padding:12px">
+            <div style="font-size:0.68rem;color:var(--text-muted)">Expected yield</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--text)">${(d.expected_yield_kg/1000).toFixed(1)} tonnes</div>
+          </div>
+        </div>
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:10px;text-align:right">${d.source} · Selling at ₹${d.sell_price_per_kg}/kg</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="disclaimer">⚠️ ${e.message}</div>`;
+  }
+};
+
+/* ── initTools — runs once when Tools tab is opened ─────────── */
+let _toolsInit = false;
+function initTools() {
+  if (_toolsInit) return;
+  _toolsInit = true;
+  // Auto-fill Pesticide from last scan if available
+  if (form.crop) {
+    const fc = document.getElementById('fc-crop');
+    if (fc) fc.value = form.crop;
+    const pr = document.getElementById('pr-crop');
+    if (pr) pr.value = form.crop;
+    const fs = document.getElementById('fc-stage');
+    if (fs && form.growth_stage) fs.value = form.growth_stage;
+  }
+  if (form.symptom_group) {
+    const sym2dis = {
+      leaf_spots: 'leaf_spots', yellowing: 'yellowing', wilting: 'wilting',
+      leaf_curling: 'mosaic_virus', holes_chewing: 'holes', powder: 'powder',
+    };
+    const dis = sym2dis[form.symptom_group];
+    const pdis = document.getElementById('pc-disease');
+    if (pdis && dis) {
+      pdis.value = dis;
+      const banner  = document.getElementById('pc-ai-banner');
+      const bannerT = document.getElementById('pc-ai-text');
+      if (banner && bannerT) {
+        bannerT.textContent = `${form.crop || ''} · ${dis.replace(/_/g,' ')}`;
+        banner.style.display = 'block';
+      }
+    }
+  }
+  loadPcProducts();
+  calcFertilizer();
+  calcProfit();
+}
+
+/* ══ NEIGHBOUR ALERT (preventive banner) ════════════════════= */
+async function loadNeighbourAlert() {
+  const alertEl = document.getElementById('neighbour-alert');
+  if (!alertEl) return;
+  try {
+    const lat = form.lat || 12.97, lon = form.lon || 77.59;
+    const d = await API.get(`/api/v1/nearby-cases?lat=${lat}&lon=${lon}&days=7`);
+    const cases = d.cases || [];
+    if (!cases.length) return;
+    const top = cases[0];
+    alertEl.innerHTML = `
+      ⚠️ <strong>${top.count || cases.length} ${top.crop || 'crop'} disease reports</strong>
+      near your area this week. Check your crop early.
+      <button onclick="this.parentElement.style.display='none'" style="margin-left:8px;background:none;border:none;color:inherit;cursor:pointer;font-size:1rem">✕</button>`;
+    alertEl.style.display = 'flex';
+  } catch(_) {}
+}
+
+/* ══ i18n additions for Tools tab ═══════════════════════════= */
+// Patch into existing LABELS dict
+(function() {
+  if (typeof LABELS === 'undefined') return;
+  ['en','kn','hi'].forEach(l => { if (LABELS[l]) {
+    if (l==='en') LABELS[l]['tab.tools'] = 'Tools';
+    if (l==='kn') LABELS[l]['tab.tools'] = 'ಉಪಕರಣಗಳು';
+    if (l==='hi') LABELS[l]['tab.tools'] = 'उपकरण';
+  }});
+})();
+</script>
+</body>
+</html>
